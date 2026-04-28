@@ -1,0 +1,191 @@
+# 📚 ReadLog — Suivi de lectures
+
+> Application mobile & web pour suivre ses lectures, sauvegarder ses citations et atteindre ses objectifs annuels.
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Stack](https://img.shields.io/badge/stack-FastAPI%20%7C%20React%20Native%20%7C%20PostgreSQL-informational)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+---
+
+## Aperçu
+
+ReadLog est une application full-stack permettant de gérer sa bibliothèque personnelle depuis son téléphone. On peut scanner le code-barres d'un livre pour l'ajouter instantanément, suivre sa progression de lecture, noter ses livres et sauvegarder ses citations préférées.
+
+```
+📱 Mobile (React Native + Expo)   ←→   🔧 API (FastAPI)   ←→   🗄️ Base de données (PostgreSQL)
+```
+
+---
+
+## Fonctionnalités
+
+### Bibliothèque personnelle
+- **Scan de code-barres** — ajout instantané via la caméra du téléphone (ISBN → Google Books API)
+- **Recherche manuelle** — par titre, auteur ou ISBN
+- **Statuts de lecture** — À lire · En cours · Terminé · Abandonné
+- **Notes & avis** — note sur 5 étoiles + commentaire libre par livre
+
+### Notes & citations
+- Sauvegarder des extraits avec numéro de page
+- Rédiger des notes longues par livre
+- Retrouver toutes ses citations depuis la fiche d'un livre
+
+### Objectifs & statistiques
+- Objectif annuel de livres à lire avec barre de progression
+- Tableau de bord : livres lus, en cours, genres préférés
+- Rappels de lecture configurables (notifications push)
+
+---
+
+## Stack technique
+
+| Couche | Technologie |
+|--------|-------------|
+| Backend | FastAPI (Python) |
+| Base de données | PostgreSQL + SQLAlchemy |
+| Authentification | JWT (bcrypt) |
+| Mobile | React Native (Expo) |
+| API livres | Google Books API |
+| Déploiement backend | Railway |
+| Déploiement mobile | Expo Go / EAS Build |
+
+---
+
+## Architecture
+
+```
+readlog/
+├── backend/
+│   ├── app/
+│   │   ├── models/          # SQLAlchemy — User, Book, UserBook, Quote
+│   │   ├── routers/         # auth, books, stats, quotes
+│   │   ├── schemas/         # Pydantic schemas
+│   │   ├── services/        # Logique métier, appels Google Books
+│   │   └── main.py
+│   ├── alembic/             # Migrations
+│   └── requirements.txt
+│
+└── mobile/
+    ├── app/
+    │   ├── (tabs)/          # Bibliothèque, Recherche, Stats, Profil
+    │   ├── book/[id].tsx    # Fiche livre
+    │   └── _layout.tsx
+    ├── components/
+    ├── hooks/
+    └── package.json
+```
+
+---
+
+## Démarrage rapide
+
+### Prérequis
+
+- Python 3.11+
+- Node.js 18+
+- Expo CLI
+- PostgreSQL
+
+### Backend
+
+```bash
+# Cloner le repo
+git clone https://github.com/username/readlog.git
+cd readlog/backend
+
+# Environnement virtuel
+python -m venv venv
+source venv/bin/activate
+
+# Dépendances
+pip install -r requirements.txt
+
+# Variables d'environnement
+cp .env.example .env
+# Renseigner DATABASE_URL, SECRET_KEY, GOOGLE_BOOKS_API_KEY
+
+# Migrations
+alembic upgrade head
+
+# Lancer le serveur
+uvicorn app.main:app --reload
+```
+
+API disponible sur `http://localhost:8000` — Documentation interactive : `http://localhost:8000/docs`
+
+### Mobile
+
+```bash
+cd readlog/mobile
+
+# Dépendances
+npm install
+
+# Lancer Expo
+npx expo start
+```
+
+Scanner le QR code avec l'app **Expo Go** sur iOS ou Android.
+
+---
+
+## Variables d'environnement
+
+```env
+# backend/.env
+DATABASE_URL=postgresql://user:password@localhost:5432/readlog
+SECRET_KEY=votre_secret_jwt
+GOOGLE_BOOKS_API_KEY=votre_clé_api
+```
+
+---
+
+## Endpoints principaux
+
+```
+POST   /auth/register        Inscription
+POST   /auth/login           Connexion (retourne un JWT)
+
+GET    /books/search         Recherche via Google Books
+POST   /books/add            Ajouter un livre à sa bibliothèque
+GET    /books/me             Mes livres (avec filtres)
+PATCH  /books/{id}/status    Mettre à jour le statut et la note
+
+POST   /quotes               Ajouter une citation
+GET    /quotes/{book_id}     Citations d'un livre
+
+GET    /stats                Statistiques de l'utilisateur
+```
+
+---
+
+## Captures d'écran
+
+> *À venir — démo disponible via Expo Go*
+
+| Accueil | Bibliothèque | Fiche livre | Statistiques |
+|---------|-------------|-------------|--------------|
+| 📊 Dashboard | 📚 Ma liste | 📖 Détail | 📈 Progression |
+
+---
+
+## Roadmap
+
+- [x] Authentification JWT
+- [x] Scan de code-barres + Google Books API
+- [x] Gestion des statuts et notes
+- [x] Citations et notes de lecture
+- [x] Statistiques et objectif annuel
+- [ ] Connexion OAuth (Google / Apple)
+- [ ] Export des notes en PDF
+- [ ] Recommandations basées sur les préférences
+- [ ] Profil public partageable
+- [ ] Badges et gamification
+
+---
+
+## Licence
+
+MIT — voir [LICENSE](./LICENSE)
+
