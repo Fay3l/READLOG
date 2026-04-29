@@ -1,0 +1,48 @@
+.vscode
+# ── Environnement virtuel uv ──────────────────────────────
+.venv/
+.uv-cache/
+
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Variables d'environnement & secrets ──────────────────
+.env
+.env.*
+!.env.example        # garder l'exemple sans les vraies valeurs
+
+# ── IDEs & éditeurs ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Tests & coverage ──────────────────────────────────────
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Logs & bases de données locales ──────────────────────
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# ── Docker (si local seulement) ───────────────────────────
+# Ne pas exclure si tu veux versionner ton Dockerfile
+docker-compose.override.yml
