@@ -1,6 +1,6 @@
 
 from fastapi import FastAPI
-from db import DB
+from database.db import DB
 
 app = FastAPI()
 DATABASE_URL = "sqlite:///example.db"
