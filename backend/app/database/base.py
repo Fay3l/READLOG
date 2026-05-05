@@ -1,3 +1,7 @@
-from sqlalchemy.orm import declarative_base # pyright: ignore[reportMissingImports]
+""" Base file"""
+from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass  # pyright: ignore[reportMissingImports]
 
-Base = declarative_base()
+
+class Base(DeclarativeBase, MappedAsDataclass):
+    """Base Class"""
+    pass
