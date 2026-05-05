@@ -14,7 +14,7 @@ from uuid import UUID  # pyright: ignore[reportMissingImports]
 class ReadingNotes(Base):
     __tablename__ = "reading_notes"
 
-    id: Mapped[UUID]
+    id: Mapped[UUID] = mapped_column(primary_key=True)
     content: Mapped[str]
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

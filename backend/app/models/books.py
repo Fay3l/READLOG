@@ -15,7 +15,7 @@ from uuid import UUID  # pyright: ignore[reportMissingImports]
 class Books(Base):
     __tablename__ = "books"
 
-    id: Mapped[UUID]
+    id: Mapped[UUID] = mapped_column(primary_key=True)
     google_books_id: Mapped[str]
     isbn: Mapped[str]
     title: Mapped[str]

@@ -15,7 +15,7 @@ from uuid import UUID  # pyright: ignore[reportMissingImports]
 class ReadingReminders(Base):
     __tablename__ = "reading_reminders"
 
-    id: Mapped[UUID]
+    id: Mapped[UUID] = mapped_column(primary_key=True)
     remind_at: Mapped[datetime.datetime]
     days: Mapped[str]
     is_active: Mapped[bool]

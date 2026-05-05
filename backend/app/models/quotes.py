@@ -12,7 +12,7 @@ from uuid import UUID # pyright: ignore[reportMissingImports]
 class Quotes(Base):
     __tablename__="quotes"
 
-    id:Mapped[UUID]
+    id:Mapped[UUID] = mapped_column(primary_key=True)
     content: Mapped[str]
     page_number: Mapped[int]
     created_at: Mapped[datetime.datetime]

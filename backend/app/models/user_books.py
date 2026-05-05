@@ -15,7 +15,7 @@ from sqlalchemy.sql import func  # pyright: ignore[reportMissingImports]
 class UserBooks(Base):
     __tablename__ = "user_books"
 
-    id: Mapped[UUID]
+    id: Mapped[UUID] = mapped_column(primary_key=True)
     started_at: Mapped[datetime.datetime]
     finished_at: Mapped[datetime.datetime]
     status: Mapped[str]
