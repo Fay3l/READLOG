@@ -1,6 +1,6 @@
 """ Table User Books """
 import datetime
-from database.base import Base
+from ..database.base import Base
 from uuid import UUID
 from typing import List
 from typing import Optional

@@ -1,6 +1,6 @@
 """ Table User """
 import datetime
-from database.base import Base
+from ..database.base import Base
 from typing import List  # pyright: ignore[reportMissingImports]
 from typing import Optional  # pyright: ignore[reportMissingImports]
 from sqlalchemy import ForeignKey  # pyright: ignore[reportMissingImports]

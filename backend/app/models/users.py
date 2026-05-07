@@ -1,32 +1,33 @@
 """ Table User """
 import datetime
-from database.base import Base
-from typing import List  # pyright: ignore[reportMissingImports]
-from typing import Optional  # pyright: ignore[reportMissingImports]
-from sqlalchemy import ForeignKey  # pyright: ignore[reportMissingImports]
+from ..database.base import Base
 # pyright: ignore[reportMissingImports]
-from sqlalchemy import String, DateTime
+from sqlalchemy import DateTime, String
 # pyright: ignore[reportMissingImports]
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+# pyright: ignore[reportMissingImports]
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func  # pyright: ignore[reportMissingImports]
-from uuid import UUID  # pyright: ignore[reportMissingImports]
+from uuid import UUID, uuid4  # pyright: ignore[reportMissingImports]
+from datetime import datetime, timezone
 
 
 class Users(Base):
     """ User """
     __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(primary_key=True)
-    email: Mapped[str]
-    password_hash: Mapped[str]
-    name: Mapped[str]
-    avatar_url: Mapped[str]
-    reading_goal: Mapped[int]
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+    id: Mapped[UUID] = mapped_column(primary_key=True, init=False)
+    email: Mapped[str] = mapped_column(String, default="")
+    password_hash: Mapped[str] = mapped_column(String, default="")
+    name: Mapped[str] = mapped_column(String, default="")
+    avatar_url: Mapped[str] = mapped_column(String, default="")
+    reading_goal: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc)
     )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc)
     )
     userbooks: Mapped[list['UserBooks']] = relationship(
         default_factory=list
