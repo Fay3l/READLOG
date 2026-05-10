@@ -12,12 +12,12 @@ from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHas
 from ..schemas.user import UserCreate
 from ..database.session import get_db
 from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
-from ..repositories.users import create_user
+from ..repositories.users import create_user,verify_user
 load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE = os.getenv('ACCESS_TOKEN_EXPIRE')
+ACCESS_TOKEN_EXPIRE = int(os.getenv('ACCESS_TOKEN_EXPIRE', 30))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 router = APIRouter()
@@ -70,21 +70,23 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 #     return user
 
 
-# @router.post("/api/login")
-# async def authenticate_user(user: OAuth2PasswordRequestForm = Depends()):
-#     data = jsonable_encoder(user)
-#     hashed_password = connectionsql.sql.get_user_password(data["username"])
-#     if not hashed_password.password:
-#         raise HTTPException(status_code=401, detail="Sign Up")
-#     if (verify_password(data["password"], hashed_password.password)):
-#         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
-#         access_token = create_access_token(
-#             data={"sub": data["username"]}, expires_delta=access_token_expires
-#         )
-#         return {"access_token": access_token, "token_type": "bearer"}
-#     else:
-#         raise HTTPException(
-#             status_code=400, detail="Incorrect username or password")
+@router.post("/api/login")
+async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    data = jsonable_encoder(user)
+    print(data)
+    hashed_password = await verify_user(db=db,name=data["username"],email=data["username"])
+    print(hashed_password)
+    if not hashed_password:
+        raise HTTPException(status_code=401, detail="Sign Up")
+    if (verify_password(data["password"], hashed_password)):
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
+        access_token = create_access_token(
+            data={"sub": data["username"]}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+    else:
+        raise HTTPException(
+            status_code=400, detail="Incorrect username or password")
 
 
 @router.post("/api/signup")
