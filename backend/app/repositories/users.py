@@ -1,6 +1,6 @@
-from uuid import uuid4  # type: ignore
-from sqlalchemy.orm import Session  # type: ignore
-from sqlalchemy import select  # type: ignore
+from uuid import uuid4 
+from sqlalchemy.orm import Session 
+from sqlalchemy import select 
 from ..models.users import Users
 
 
