@@ -3,7 +3,7 @@ import { Tabs } from "expo-router";
 import { Theme } from "@/constants/theme";
 
 const EmojiText = ({name}: {name:string}) => {
-    return <Text>{name}</Text>
+    return <Text style={styles.tabBarIcon}>{name}</Text>
 }
 
 const TabBarLabel = ({ name, focused }: { name: string; focused: boolean } ) => {
@@ -34,6 +34,9 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+    tabBarIcon:{
+        fontSize:Theme.fontSizes.md
+    },
     tabBarLabel:{
         color:Theme.colors.text.secondary,
         fontFamily:Theme.fonts.playfair.regular,
