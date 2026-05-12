@@ -13,7 +13,8 @@ const TabBarLabel = ({ name, focused }: { name: string; focused: boolean } ) => 
 export default function TabsLayout() {
     return <Tabs screenOptions={{
         tabBarActiveTintColor: "#e3a54a",
-        
+        tabBarStyle:styles.tabBarStyle
+    
     }}>
         <Tabs.Screen name="index" options={{
             headerShown: false,
@@ -39,10 +40,13 @@ const styles = StyleSheet.create({
     },
     tabBarLabel:{
         color:Theme.colors.text.secondary,
-        fontFamily:Theme.fonts.playfair.regular,
     },
     tabBarLabelActive:{
         color:"#e3a54a",
-        fontFamily:Theme.fonts.playfair.regular,
+    },
+    tabBarStyle:{
+        backgroundColor: Theme.colors.bg.nav,
+        fontFamily: Theme.fonts.system.serif,
+        position:'absolute',
     }
 })

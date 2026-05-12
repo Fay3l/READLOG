@@ -1,29 +1,43 @@
-import { Stack } from "expo-router";
-import { LogBox } from "react-native";
-import { useFonts, PlayfairDisplay_400Regular, PlayfairDisplay_700Bold, PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { SessionProvider,useSession } from '@/auth/ctx';
+import { SplashScreenController } from '@/auth/splash';
 
-LogBox.ignoreAllLogs(true);
-SplashScreen.preventAutoHideAsync();
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
 
-export default function RootLayout() {
-  const [loaded] = useFonts({
-    PlayfairDisplay_400Regular,
-    PlayfairDisplay_700Bold,
-    PlayfairDisplay_400Regular_Italic,
-  });
+export default function Root() {
+  // Set up the auth context and render your layout inside of it.
+  return (
+    <SessionProvider>
+      <SplashScreenController />
+      <RootNavigator />
+    </SessionProvider>
+  );
+}
 
-  useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+function RootNavigator() {
+  const { session } = useSession();
 
-  if (!loaded) return null;
-  
   return <Stack>
-    <Stack.Screen name="(tabs)"
-    options={{
-      headerShown: false,
-    }}></Stack.Screen>
+    <Stack.Protected guard={!!session}>
+      <Stack.Screen name="(tabs)"
+        options={{
+          headerShown: false,
+        }}>
+      </Stack.Screen>
+    </Stack.Protected>
+
+    <Stack.Protected guard={!session}>
+      <Stack.Screen name="sign-in"
+        options={{
+          headerShown: false,
+        }}>
+      </Stack.Screen>
+    </Stack.Protected>
+
+
   </Stack>;
 }
+
+// Create a new component that can access the SessionProvider context later.

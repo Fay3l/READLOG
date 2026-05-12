@@ -18,6 +18,7 @@ load_dotenv()
 
 app = FastAPI()
 
+
 origins = ["*"]
 
 app.add_middleware(
