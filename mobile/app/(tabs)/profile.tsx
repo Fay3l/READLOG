@@ -1,8 +1,12 @@
+import { useSession } from "@/auth/ctx";
 import { Theme } from "@/constants/theme";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
+
+    const {signOut} = useSession();
+
     return (<SafeAreaView style={styles.container}>
         <Text style={[styles.secondary_text, { marginTop: 20, marginLeft: 20, fontSize: Theme.fontSizes.base }]}>Mon compte</Text>
         <Text style={[{ color: "white", fontFamily: Theme.fonts.playfair.bold, marginTop: 10, marginLeft: 20,marginBottom:20, fontSize: Theme.fontSizes["3xl"] }]}>Profil</Text>
@@ -26,7 +30,9 @@ export default function Profile() {
         </View>
 
         <View style={[{padding:15, margin:20,borderWidth:0.3,borderColor:'red',borderRadius:Theme.radius.lg},styles.object_center]}>
-            <Text style={{color:'#a66161'}}>Se déconnecter</Text>
+            <Text style={{color:'#a66161'}}
+            onPress={()=> {signOut()}}
+            >Se déconnecter</Text>
         </View>
         
 

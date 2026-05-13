@@ -1,17 +1,20 @@
 import { use, createContext, type PropsWithChildren } from 'react';
+import { router } from 'expo-router';
 import axios, { HttpStatusCode } from 'axios'
 import { useStorageState } from './useStorageState'
 
-const API_URL = "http://localhost:8000"
+const API_URL = "http://192.168.1.155:8000"
 
 const AuthContext = createContext<{
-    signIn: (pw: string, user: string, email: string) => void;
+    signUp: (pw: string, user: string, email: string) => void;
     signOut: () => void;
+    logIn: (pw: string, email: string) => void;
     session?: string | null;
     isLoading: boolean;
 }>({
-    signIn: () => null,
+    signUp: () => null,
     signOut: () => null,
+    logIn: () => null,
     session: null,
     isLoading: false,
 });
@@ -32,28 +35,41 @@ export function SessionProvider({ children }: PropsWithChildren) {
     return (
         <AuthContext.Provider
             value={{
-                signIn: (pw: string, name: string, email: string) => {
+                signUp: (pw: string, name: string, email: string) => {
                     axios.post(API_URL + '/api/signup',
                         {
-                            name,
+                            name: name,
                             password: pw,
-                            email
-                        },
-                        {
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            }
+                            email: email
                         }
                     )
-                        .then(function (response) {
-                            if (HttpStatusCode.Accepted) {
-                                setSession(response.data);
+                        .then((response) => {
+                            if (response.status == 200) {
+                                router.push('/login')
                             }
+
                         })
-                    
+
                 },
                 signOut: () => {
                     setSession(null);
+                },
+                logIn: (pw, email) => {
+                    axios
+                        .post(API_URL + '/api/login', {
+                            username: email,
+                            password: pw,
+                        }, {
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        })
+                        .then(function (response) {
+                            if (HttpStatusCode.Accepted) {
+                                console.log(response)
+                                setSession('xx');
+                            }
+                        })
                 },
                 session,
                 isLoading,

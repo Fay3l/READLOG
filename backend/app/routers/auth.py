@@ -92,6 +92,7 @@ async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Ses
 @router.post("/api/signup")
 async def create_login(user: UserCreate, db: Session = Depends(get_db)):
     data = jsonable_encoder(user)
+    print(data)
     if (data):
         # if (connectionsql.sql.username_duplicate(data["name"])):
         await create_user(db=db, name=data["name"], password=hash_password(data["password"]), email=data["email"])

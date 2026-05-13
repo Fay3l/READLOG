@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { SessionProvider,useSession } from '@/auth/ctx';
+import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
 
 export const unstable_settings = {
@@ -29,7 +29,23 @@ function RootNavigator() {
     </Stack.Protected>
 
     <Stack.Protected guard={!session}>
-      <Stack.Screen name="sign-in"
+      <Stack.Screen name="auth"
+        options={{
+          headerShown: false,
+        }}>
+      </Stack.Screen>
+    </Stack.Protected>
+
+    <Stack.Protected guard={!session}>
+      <Stack.Screen name="sign-up"
+        options={{
+          headerShown: false,
+        }}>
+      </Stack.Screen>
+    </Stack.Protected>
+
+    <Stack.Protected guard={!session}>
+      <Stack.Screen name='login'
         options={{
           headerShown: false,
         }}>
