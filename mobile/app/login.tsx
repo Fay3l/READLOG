@@ -23,7 +23,7 @@ export default function LogIn() {
                         // Navigate after signing in. You may want to tweak this to ensure sign-in is successful before navigating.
                         router.replace("/(tabs)");
                     }}>
-                    Sign Up
+                    Log In
                 </Text>
             </View>
         </View>
