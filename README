@@ -173,10 +173,10 @@ GET    /stats                Statistiques de l'utilisateur
 ## Roadmap
 
 - [x] Authentification JWT
-- [x] Scan de code-barres + Google Books API
-- [x] Gestion des statuts et notes
-- [x] Citations et notes de lecture
-- [x] Statistiques et objectif annuel
+- [ ] Scan de code-barres + Google Books API
+- [ ] Gestion des statuts et notes
+- [ ] Citations et notes de lecture
+- [ ] Statistiques et objectif annuel
 - [ ] Connexion OAuth (Google / Apple)
 - [ ] Export des notes en PDF
 - [ ] Recommandations basées sur les préférences

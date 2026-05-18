@@ -10,13 +10,13 @@ export default function Auth() {
         router.push('/login')
     }
     return (
-        <View>
-            <View style={[{ padding: 15, margin: 20, borderWidth: 0.3, borderColor: 'black', borderRadius: Theme.radius.lg }]}>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={[{ padding: 15, margin: 20, borderWidth: 0.7, borderColor: 'black', borderRadius: Theme.radius.lg }]}>
                 <Text
                     onPress={() => { login() }}
                 >Se connecter</Text>
             </View>
-            <View style={[{ padding: 15, margin: 20, borderWidth: 0.3, borderColor: 'black', borderRadius: Theme.radius.lg }]}>
+            <View style={[{ padding: 15, margin: 20, borderWidth: 0.7, borderColor: 'black', borderRadius: Theme.radius.lg }]}>
                 <Text
                     onPress={() => { signup() }}
                 >S'inscrire</Text>
