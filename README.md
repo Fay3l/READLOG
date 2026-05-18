@@ -110,6 +110,7 @@ alembic upgrade head
 
 # Lancer le serveur
 uvicorn app.main:app --reload
+
 ```
 
 API disponible sur `http://localhost:8000` — Documentation interactive : `http://localhost:8000/docs`
@@ -144,6 +145,7 @@ GOOGLE_BOOKS_API_KEY=votre_clé_api
 ## Endpoints principaux
 
 ```
+
 POST   /auth/register        Inscription
 POST   /auth/login           Connexion (retourne un JWT)
 
@@ -156,6 +158,7 @@ POST   /quotes               Ajouter une citation
 GET    /quotes/{book_id}     Citations d'un livre
 
 GET    /stats                Statistiques de l'utilisateur
+
 ```
 
 ---
