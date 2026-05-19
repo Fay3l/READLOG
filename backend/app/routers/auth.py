@@ -20,7 +20,7 @@ ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKEN_EXPIRE = int(os.getenv('ACCESS_TOKEN_EXPIRE', 30))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-router = APIRouter()
+router = APIRouter(tags=["auth"])
 password_hash = PasswordHash.recommended()
 ph = PasswordHasher(
     time_cost=2,      # nombre d'itérations

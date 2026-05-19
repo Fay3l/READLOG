@@ -1,18 +1,18 @@
-from fastapi import APIRouter # pyright: ignore[reportMissingImports]
+from fastapi import APIRouter  # pyright: ignore[reportMissingImports]
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/users/", tags=["users"])
-async def read_users():
+@router.get("/", )
+async def read():
     return [{"username": "Rick"}, {"username": "Morty"}]
 
 
-@router.get("/users/me", tags=["users"])
+@router.get("/me")
 async def read_user_me():
     return {"username": "fakecurrentuser"}
 
 
-@router.get("/users/{username}", tags=["users"])
+@router.get("/{username}")
 async def read_user(username: str):
     return {"username": username}

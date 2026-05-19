@@ -9,7 +9,7 @@ from sqlalchemy import String, DateTime
 # pyright: ignore[reportMissingImports]
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-from uuid import UUID  # pyright: ignore[reportMissingImports]
+from uuid import UUID
 
 
 class Books(Base):
