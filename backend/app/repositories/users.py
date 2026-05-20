@@ -22,3 +22,8 @@ async def verify_user(db: Session, name: str, email: str) :
     ).scalar_one_or_none()
     return result
     
+
+async def get_user_by_name(name:str,db:Session):
+    user = db.query(Users).filter(Users.name == name).first()
+    print(user)
+    return user
