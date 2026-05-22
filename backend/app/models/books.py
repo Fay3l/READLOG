@@ -1,5 +1,5 @@
 """ Table User """
-import datetime
+from datetime import datetime, timezone
 from ..database.base import Base
 from typing import List
 from typing import Optional
@@ -24,10 +24,10 @@ class Books(Base):
     description: Mapped[str]
     publisher: Mapped[str]
     published_year: Mapped[int]
-    genres: Mapped[str]
-    page_count: Mapped[int]
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True)
+    genres: Mapped[str] = mapped_column(String, default="")
+    page_count: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),default=datetime.now(timezone.utc)
     )
     userbooks: Mapped[list['UserBooks']] = relationship(
         default_factory=list

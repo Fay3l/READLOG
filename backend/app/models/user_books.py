@@ -1,5 +1,5 @@
 """ Table User Books """
-import datetime
+from datetime import datetime, timezone
 from ..database.base import Base
 from uuid import UUID
 from typing import List
@@ -16,18 +16,24 @@ class UserBooks(Base):
     __tablename__ = "user_books"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
-    started_at: Mapped[datetime.datetime]
-    finished_at: Mapped[datetime.datetime]
-    status: Mapped[str]
-    cover_url: Mapped[str]
-    personal_note: Mapped[str]
-    rating: Mapped[int]
-    current_page: Mapped[int]
-    updated_at: Mapped[datetime.datetime]
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True)
+    started_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
+    finished_at: Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc),nullable=True)
+    status: Mapped[str] = mapped_column(
+        String, default="to_read")  # to_read, reading, read
+    cover_url: Mapped[str] = mapped_column(String, default="")
+    personal_note: Mapped[str] = mapped_column(String, default="")
+    rating: Mapped[int] = mapped_column(default=0)
+    current_page: Mapped[int] = mapped_column(default=0)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc)
     )
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"),default=None)
-    book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id"),default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc)
+    )
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), default=None)
+    book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id"), default=None)
     quotes: Mapped[list['Quotes']] = relationship(default_factory=list)
     quotes: Mapped[list['ReadingNotes']] = relationship(default_factory=list)

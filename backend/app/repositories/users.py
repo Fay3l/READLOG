@@ -25,5 +25,6 @@ async def verify_user(db: Session, name: str, email: str) :
 
 async def get_user_by_name(name:str,db:Session):
     user = db.query(Users).filter(Users.name == name).first()
-    print(user)
-    return user
+    if user is not None:
+        return user
+    

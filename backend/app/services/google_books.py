@@ -25,6 +25,8 @@ def _parse_item(item: dict) -> BookResult | None:
     isbn = isbn or next((i["identifier"] for i in identifiers
                          if i["type"] == "ISBN_10"), None)
 
+    print("\n------ID:", item["id"])
+
     return BookResult(
         google_books_id=item["id"],
         title=title,
@@ -34,7 +36,8 @@ def _parse_item(item: dict) -> BookResult | None:
         page_count=info.get("pageCount"),
         isbn=isbn,
         published_year=info.get("publishedDate", "")[:4] or None,
-        genre=info.get("categories", [None])[0],
+        publisher=info.get("publisher"),
+        genre=info.get("categories", [None])[0],  # premier élément ou None
     )
 
 
@@ -51,8 +54,9 @@ async def search_books(query: str, max_results: int = 10) -> list[BookResult]:
         response.raise_for_status()
 
     items = response.json().get("items", [])
+    print(f"Google Books API: {items} résultats pour '{query}'")
     results = [_parse_item(item) for item in items]
-    return [r for r in results if r is not None] 
+    return [r for r in results if r is not None]
 
 
 async def get_book_by_id(google_books_id: str) -> BookResult | None:

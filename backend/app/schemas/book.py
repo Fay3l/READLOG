@@ -3,14 +3,13 @@ from pydantic import BaseModel
 
 
 class BookResult(BaseModel):
-    id: UUID
     google_books_id: str
-    isbn: str
     title: str
     author: str
-    cover_url: str
-    description: str
-    publisher: str
-    published_year: int
-    genres: str
-    page_count: int
+    cover_url: str | None = None
+    description: str | None = None
+    page_count: int | None = None
+    isbn: str | None = None
+    published_year: str | None = None
+    publisher: str | None = None       
+    genre: str | None = None

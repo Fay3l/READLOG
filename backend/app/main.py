@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI # pyright: ignore[reportMissingImports]
 from dotenv import load_dotenv # pyright: ignore[reportMissingImports]
 from fastapi.middleware.cors import CORSMiddleware # pyright: ignore[reportMissingImports]
-from .routers import users,auth
+from .routers import users,auth,books
 from .database.db import DB
 from .database.session import init_db
 from .models.users import Users
@@ -35,6 +35,7 @@ database.connect()
 init_db(database)
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(books.router)
 
 @app.get("/")
 async def root():
