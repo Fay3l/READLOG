@@ -52,6 +52,14 @@ function RootNavigator() {
       </Stack.Screen>
     </Stack.Protected>
 
+    <Stack.Protected guard={!!session}>
+      <Stack.Screen name='camera'
+        options={{
+          headerShown: false,
+        }}>
+      </Stack.Screen>
+    </Stack.Protected>
+
 
   </Stack>;
 }

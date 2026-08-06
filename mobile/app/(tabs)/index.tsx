@@ -1,12 +1,21 @@
 import { Theme } from "@/constants/theme";
-import { StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { StyleSheet, Text, View, Image } from "react-native";
 
 export default function Index() {
+  const camera = ()=>{
+    router.push('./camera')
+  }
   return (
     <View
       style={styles.container}
     >
+      <Image style={{width:20, height:20}} source={require('@/assets/icon/moon.svg')} />
       <Text style={styles.secondary_text}>Hello World</Text>
+      <Text style={styles.secondary_text}>Ma bibliothèque</Text>
+      <View>
+        <Text onPress={camera}>Camera</Text>
+      </View>
     </View>
   );
 }

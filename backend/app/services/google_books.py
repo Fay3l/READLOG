@@ -25,8 +25,6 @@ def _parse_item(item: dict) -> BookResult | None:
     isbn = isbn or next((i["identifier"] for i in identifiers
                          if i["type"] == "ISBN_10"), None)
 
-    print("\n------ID:", item["id"])
-
     return BookResult(
         google_books_id=item["id"],
         title=title,

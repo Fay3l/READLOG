@@ -26,7 +26,7 @@ export default function Profile() {
             <Text style={{fontSize:Theme.fontSizes.md,color:Theme.colors.text.muted}}>REGLAGES</Text>
             <Text style={[{fontSize:Theme.fontSizes.md,color:Theme.colors.text.secondary}]}>🎯 Objectif annuel</Text>
             <Text style={[{fontSize:Theme.fontSizes.md,color:Theme.colors.text.secondary}]}>🔔 Rappel de lecture</Text>
-            <Text style={[{fontSize:Theme.fontSizes.md,color:Theme.colors.text.secondary}]}>🌙 Thème</Text>
+            <Text style={[{fontSize:Theme.fontSizes.md,color:Theme.colors.text.secondary}]}>  Thème </Text> 
         </View>
 
         <View style={[{padding:15, margin:20,borderWidth:0.3,borderColor:'red',borderRadius:Theme.radius.lg},styles.object_center]}>
