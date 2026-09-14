@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
+import { ThemeProvider } from '@/constants/themecontext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -19,49 +20,52 @@ export default function Root() {
 function RootNavigator() {
   const { session } = useSession();
 
-  return <Stack>
-    <Stack.Protected guard={!!session}>
-      <Stack.Screen name="(tabs)"
-        options={{
-          headerShown: false,
-        }}>
-      </Stack.Screen>
-    </Stack.Protected>
+  return (
+    <ThemeProvider>
+      <Stack>
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name="(tabs)"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
 
-    <Stack.Protected guard={!session}>
-      <Stack.Screen name="auth"
-        options={{
-          headerShown: false,
-        }}>
-      </Stack.Screen>
-    </Stack.Protected>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="auth"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
 
-    <Stack.Protected guard={!session}>
-      <Stack.Screen name="sign-up"
-        options={{
-          headerShown: true,
-        }}>
-      </Stack.Screen>
-    </Stack.Protected>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="sign-up"
+            options={{
+              headerShown: true,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
 
-    <Stack.Protected guard={!session}>
-      <Stack.Screen name='login'
-        options={{
-          headerShown: true,
-        }}>
-      </Stack.Screen>
-    </Stack.Protected>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name='login'
+            options={{
+              headerShown: true,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
 
-    <Stack.Protected guard={!!session}>
-      <Stack.Screen name='camera'
-        options={{
-          headerShown: false,
-        }}>
-      </Stack.Screen>
-    </Stack.Protected>
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name='camera'
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
+      </Stack>
+    </ThemeProvider>
 
-
-  </Stack>;
+  );
 }
 
 // Create a new component that can access the SessionProvider context later.

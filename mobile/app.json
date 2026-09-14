@@ -48,7 +48,9 @@
           "barcodeScannerEnabled": true
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      "expo-barcode-scanner"
     ],
     "experiments": {
       "typedRoutes": true,

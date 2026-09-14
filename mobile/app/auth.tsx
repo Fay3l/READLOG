@@ -1,8 +1,9 @@
-import { Theme } from "@/constants/theme";
+import { useTheme } from "@/constants/themecontext";
 import { router } from "expo-router";
 import { View,Text } from "react-native";
 
 export default function Auth() {
+    const Theme = useTheme()
     const signup = () => {
         router.push('/sign-up')
     }

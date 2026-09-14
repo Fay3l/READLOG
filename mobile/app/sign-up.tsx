@@ -3,7 +3,6 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useSession } from '@/auth/ctx';
 import React from 'react';
-import { Theme } from '@/constants/theme';
 import { Label } from '@/components/label';
 
 export default function SignUp() {

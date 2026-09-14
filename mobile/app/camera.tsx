@@ -1,10 +1,14 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const index = () => {
+    router.push('/(tabs)')
+  }
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -27,7 +31,17 @@ export default function Camera() {
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} />
+
+      <CameraView onBarcodeScanned={(event)=>console.log(event)} barcodeScannerSettings={{
+        barcodeTypes: ["ean13"],
+      }} style={styles.camera} facing={facing} />
+      <View style={{
+        position: 'absolute', top: 70, right: '35%', paddingHorizontal: 64, width: '100%'
+      }}>
+        <TouchableOpacity style={styles.button} onPress={index}>
+          <Text style={styles.text}>Back</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
           <Text style={styles.text}>Flip Camera</Text>

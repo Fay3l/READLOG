@@ -1,4 +1,5 @@
-import { Theme } from "@/constants/theme";
+import { useTheme } from "@/constants/themecontext";
+import { useLabelStyles } from "@/hooks/useLabelStyles";
 
 import { View,Text,TextInput,StyleSheet } from "react-native";
 
@@ -8,8 +9,8 @@ interface LabelProps {
   name: string;
 }
 
-
 export function Label({value,name,setValue}: LabelProps){
+    const styles = useLabelStyles()
     return(
         <View>
             <Text style={{margin:6}}>{name}</Text>
@@ -18,11 +19,3 @@ export function Label({value,name,setValue}: LabelProps){
     )
 }
 
-const styles = StyleSheet.create({
-    text_input: {
-        borderColor: 'black',
-        borderWidth: 0.7,
-        borderRadius: Theme.radius.lg,
-        padding: 5
-    },
-})
