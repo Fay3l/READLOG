@@ -1,11 +1,16 @@
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
+import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { search_books, useBookStore } from '@/fetch/books';
+import { Alert } from "react-native";
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const setScannedBook = useBookStore(s => s.setScannedBook)
+  const isScanning = useRef(false);
+
   const index = () => {
     router.push('/(tabs)')
   }
@@ -25,6 +30,45 @@ export default function Camera() {
     );
   }
 
+  async function searchEan13Books(event: BarcodeScanningResult) {
+    if (isScanning.current) return;
+
+    isScanning.current = true;
+
+    try {
+      const res = await search_books(event.data);
+
+      if (!res || res.length === 0) {
+        isScanning.current = false;
+        Alert.alert(
+          "Not Find Book",
+          `Not book for ISBN ${event.data}.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                isScanning.current = false;
+              },
+            },
+          ]
+        );
+        router.push('/(tabs)');
+        return;
+      }
+
+      setScannedBook(res[0]);
+      console.log(
+        "STORE APRES :",
+        useBookStore.getState().scannedBook
+      );
+      router.push("/bookresult");
+    } catch (error) {
+      console.error(error);
+      isScanning.current = false;
+    }
+  }
+
+
   function toggleCameraFacing() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
@@ -32,7 +76,7 @@ export default function Camera() {
   return (
     <View style={styles.container}>
 
-      <CameraView onBarcodeScanned={(event)=>console.log(event)} barcodeScannerSettings={{
+      <CameraView onBarcodeScanned={searchEan13Books} barcodeScannerSettings={{
         barcodeTypes: ["ean13"],
       }} style={styles.camera} facing={facing} />
       <View style={{
