@@ -53,7 +53,7 @@ export default function LogIn() {
                     </View>
                     <View style={{ flex: 1, height: 1, backgroundColor:theme.colors.text.hint }} />
                 </View>
-                <View style={{ flexDirection: 'row', gap: 5, justifyContent: 'center' }}>
+                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
                     <TouchableOpacity style={styles.button_secondary}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
                             <GoogleIcon width={20} height={20}></GoogleIcon>
@@ -87,8 +87,6 @@ function useStyles() {
         container: {
             flex: 1,
             margin: 20,
-            // marginTop: 45,
-            
             gap: 15,
             backgroundColor: theme.colors.bg.primary
         },
