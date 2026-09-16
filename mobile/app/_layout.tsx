@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
-import { ThemeProvider } from '@/constants/themecontext';
+import { ThemeProvider, useThemeContext } from '@/constants/themecontext';
+import { StatusBar } from 'expo-status-bar';
+
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -19,10 +21,14 @@ export default function Root() {
 
 function RootNavigator() {
   const { session } = useSession();
-
+  const { theme } = useThemeContext()
   return (
     <ThemeProvider>
-      <Stack>
+      <Stack screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.bg.nav },
+        headerTintColor: theme.colors.text.primary,
+        contentStyle: { backgroundColor: theme.colors.bg.primary },
+      }}>
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)"
             options={{
@@ -31,8 +37,16 @@ function RootNavigator() {
           </Stack.Screen>
         </Stack.Protected>
 
-        <Stack.Protected guard={!session}>
+        {/* <Stack.Protected guard={!session}>
           <Stack.Screen name="auth"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected> */}
+
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name='login'
             options={{
               headerShown: false,
             }}>
@@ -42,15 +56,7 @@ function RootNavigator() {
         <Stack.Protected guard={!session}>
           <Stack.Screen name="sign-up"
             options={{
-              headerShown: true,
-            }}>
-          </Stack.Screen>
-        </Stack.Protected>
-
-        <Stack.Protected guard={!session}>
-          <Stack.Screen name='login'
-            options={{
-              headerShown: true,
+              headerShown: false,
             }}>
           </Stack.Screen>
         </Stack.Protected>
