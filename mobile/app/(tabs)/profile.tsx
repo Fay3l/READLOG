@@ -55,8 +55,8 @@ export default function Profile() {
                     </View>
                 </View>
 
-                <TouchableOpacity onPress={() => { signOut() }} style={[{ paddingVertical: 20, margin: 20, borderWidth: 0.3, borderColor: 'red', borderRadius: Theme.radius.lg }]}>
-                    <Text style={{ color: '#a66161', textAlign: 'center' }}>
+                <TouchableOpacity onPress={() => { signOut() }} style={[{ paddingVertical: 20, margin: 20, borderWidth: 1, borderColor: 'red', borderRadius: Theme.radius.lg }]}>
+                    <Text style={{ color: '#a66161', textAlign: 'center', fontFamily:Theme.fonts.dmSans.medium, fontWeight:"bold" }}>
                         Se déconnecter
                     </Text>
                 </TouchableOpacity>

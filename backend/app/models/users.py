@@ -1,7 +1,6 @@
 """ Table User """
 import datetime
-from ..database.base import Base
-# pyright: ignore[reportMissingImports]
+from ..database.base import Base # pyright: ignore[reportMissingImports]
 from sqlalchemy import DateTime, String
 # pyright: ignore[reportMissingImports]
 # pyright: ignore[reportMissingImports]

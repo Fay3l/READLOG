@@ -36,4 +36,4 @@ class UserBooks(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), default=None)
     book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id"), default=None)
     quotes: Mapped[list['Quotes']] = relationship(default_factory=list)
-    quotes: Mapped[list['ReadingNotes']] = relationship(default_factory=list)
+    reading_notes: Mapped[list['ReadingNotes']] = relationship(default_factory=list)

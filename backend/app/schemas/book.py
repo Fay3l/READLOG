@@ -1,5 +1,9 @@
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime
+
+from app.schemas.quote import GetQuote
+from app.schemas.reading_note import GetReadingNote
 
 
 class BookResult(BaseModel):
@@ -11,5 +15,19 @@ class BookResult(BaseModel):
     page_count: int | None = None
     isbn: str | None = None
     published_year: str | None = None
-    publisher: str | None = None       
+    publisher: str | None = None
     genre: str | None = None
+class GetUserBook(BaseModel):
+    model_config =  ConfigDict(from_attributes=True)
+    id: UUID
+    started_at: datetime
+    finished_at: datetime
+    status: str
+    cover_url: str
+    personal_note: str
+    rating: int
+    current_page: int
+    user_id: UUID
+    book_id: UUID
+    quotes: list[GetQuote]
+    reading_notes: list[GetReadingNote]

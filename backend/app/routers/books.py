@@ -23,10 +23,11 @@ async def search(
         raise HTTPException(status_code=404, detail="Aucun livre trouvé")
     return results
 
+
 @router.post("/add")
 async def add_book(google_books_id: str,
-                      status: str = "to_read",
-                      current_user: Users = Depends(get_current_user),
-                      db: Session = Depends(get_db)):
+                   status: str = "to_read",
+                   current_user: Users = Depends(get_current_user),
+                   db: Session = Depends(get_db)):
     print(f"User {current_user}")
     return await create_book(db, current_user, google_books_id, status)

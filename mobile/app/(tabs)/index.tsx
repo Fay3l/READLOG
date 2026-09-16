@@ -10,9 +10,9 @@ function getGreeting(): string {
   const hour = new Date().getHours();
 
   if (hour >= 19 || hour < 6) {
-    return 'Bonsoir';
+    return 'Bonsoir 👋';
   }
-  return 'Bonjour';
+  return 'Bonjour 👋';
 }
 
 export default function Index() {
