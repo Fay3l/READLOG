@@ -1,29 +1,31 @@
 import { useSession } from "@/auth/ctx";
 import { useTheme } from "@/constants/themecontext";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Bell from "@/assets/icon/bell.svg"
 import Moon from "@/assets/icon/moon.svg"
 import TargetHitAim from "@/assets/icon/target-hit-aim.svg"
 import { Screen } from "@/components/screen";
 import { TitlePage } from "@/components/titlepage";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { IconProfile } from "@/components/iconprofile";
 
 
 
 export default function Profile() {
     const Theme = useTheme()
     const { signOut } = useSession();
+    const { user, isLoading } = useCurrentUser();
+    if (isLoading || !user) return <ActivityIndicator />
 
     return (
         <Screen>
             <SafeAreaView style={[styles.container]}>
-                <TitlePage title="Profil" subtitle="Mon compte"/>
+                <TitlePage title="Profil" subtitle="Mon compte" />
                 <View style={[styles.object_center, { marginBottom: 20 }]}>
-                    <View style={[styles.icon_shadow, { backgroundColor: Theme.gradients.premium[0], borderRadius: Theme.radius.full, minWidth: 70, minHeight: 70 }, styles.object_center]}>
-                        <Text style={[{ fontSize: Theme.fontSizes.xl, fontWeight: "bold" }]}>A</Text>
-                    </View>
-                    <Text style={[{ color: Theme.colors.text.secondary, fontFamily: Theme.fonts.playfair.bold, fontSize: Theme.fontSizes.lg, marginTop: 10 }]}>Alice</Text>
-                    <Text style={[{ color: Theme.colors.text.secondary, fontFamily: Theme.fonts.system.serif, fontSize: Theme.fontSizes.base }]}>alice@readlog.app</Text>
+                    <IconProfile fontSize={Theme.fontSizes.xl} height={70} name={user.name} shadow={true} width={70}></IconProfile>
+                    <Text style={[{ color: Theme.colors.text.secondary, fontFamily: Theme.fonts.playfair.bold, fontSize: Theme.fontSizes.lg, marginTop: 10 }]}>{user.name}</Text>
+                    <Text style={[{ color: Theme.colors.text.secondary, fontFamily: Theme.fonts.system.serif, fontSize: Theme.fontSizes.base }]}>{user.email}</Text>
                 </View>
                 <View style={{ marginBottom: 10, marginLeft: 10, gap: 10 }}>
                     <Text style={{ fontSize: Theme.fontSizes.sm, color: Theme.colors.text.muted }}>BADGES OBTENUES</Text>
@@ -56,7 +58,7 @@ export default function Profile() {
                 </View>
 
                 <TouchableOpacity onPress={() => { signOut() }} style={[{ paddingVertical: 20, margin: 20, borderWidth: 1, borderColor: 'red', borderRadius: Theme.radius.lg }]}>
-                    <Text style={{ color: '#a66161', textAlign: 'center', fontFamily:Theme.fonts.dmSans.medium, fontWeight:"bold" }}>
+                    <Text style={{ color: '#a66161', textAlign: 'center', fontFamily: Theme.fonts.dmSans.medium, fontWeight: "bold" }}>
                         Se déconnecter
                     </Text>
                 </TouchableOpacity>
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        margin:15
+        margin: 15
     },
     object_center: {
         justifyContent: "center",

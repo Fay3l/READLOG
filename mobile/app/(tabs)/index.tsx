@@ -1,18 +1,20 @@
 import { useMemo } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Screen } from "@/components/screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TitlePage } from "@/components/titlepage";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { IconProfile } from "@/components/iconprofile";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
 
   if (hour >= 19 || hour < 6) {
-    return 'Bonsoir 👋';
+    return 'Bonsoir ';
   }
-  return 'Bonjour 👋';
+  return 'Bonjour ';
 }
 
 export default function Index() {
@@ -21,17 +23,17 @@ export default function Index() {
   const camera = () => {
     router.push('./camera')
   }
+  const { user, isLoading } = useCurrentUser();
+  if (isLoading || !user) return <ActivityIndicator />
   return (
     <Screen>
       <SafeAreaView
         style={styles.container}
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <TitlePage subtitle={getGreeting()} title="Ma Bibliothèque" />
+          <TitlePage subtitle={getGreeting()+user?.name+' 👋'} title="Ma Bibliothèque" />
           <View>
-            <View style={styles.icon_profile}>
-              <Text style={styles.icon_profile_text}>A</Text>
-            </View>
+            <IconProfile fontSize={theme.fontSizes.md} height={40} name={user.name} shadow={false} width={40}></IconProfile>
           </View>
         </View>
 

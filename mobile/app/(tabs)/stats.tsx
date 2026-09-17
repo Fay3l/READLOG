@@ -20,13 +20,15 @@ export default function About() {
         <TitlePage title="Statistiques" subtitle="Année" />
         <View style={{ flex: 1, marginTop: 10, marginBottom: 55, gap: 10, alignItems: 'stretch', justifyContent: 'space-evenly' }}>
           <View style={styles.card}>
-            <View style={{ marginLeft: 15, marginRight: 15, gap: 20,alignItems:'stretch' }}>
-              <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-                <View style={{flexDirection:'column',justifyContent:'space-between'}}>
+            <View style={{ marginLeft: 15, marginRight: 15, gap: 5, alignItems:'stretch' }}>
+              <View style={{flexDirection:'row', justifyContent:'space-between',alignItems:'center'}}>
+                <View style={{flex:1,flexDirection:'column',justifyContent:'space-between'}}>
                   <Text style={styles.text_hint}>Objectif annuel</Text>
                   <Text style={styles.text_muted}><Text style={styles.number_text}>2</Text> / 12 livres</Text>
                 </View>
-                <Progress.Circle borderWidth={2} progress={0.17} indeterminate={false} color={theme.gradients.progressBar[0]}/>
+                <View style={{flex:1,alignItems:"flex-end",paddingVertical:10}}>
+                  <Progress.Circle  borderWidth={2} progress={0.17} indeterminate={false} color={theme.gradients.progressBar[0]}/>
+                </View>
               </View>
               <View style={{gap:10}} >
                 <Progress.Bar width={null} progress={0.17} color={theme.gradients.progressBar[0]} />

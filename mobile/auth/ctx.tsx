@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import axios, { HttpStatusCode } from 'axios'
 import { useStorageState } from './useStorageState'
 
+
 const API_URL = "http://192.168.1.155:8000"
 
 const AuthContext = createContext<{
@@ -11,12 +12,14 @@ const AuthContext = createContext<{
     logIn: (pw: string, email: string) => void;
     session?: string | null;
     isLoading: boolean;
+    token?: string | null;
 }>({
     signUp: () => null,
     signOut: () => null,
     logIn: () => null,
     session: null,
     isLoading: false,
+    token: null,
 });
 
 // Use this hook to access the user info.
@@ -31,6 +34,7 @@ export function useSession() {
 
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
+    const [[, token], setToken] = useStorageState('token');
 
     return (
         <AuthContext.Provider
@@ -52,27 +56,39 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
                 },
                 signOut: () => {
+                    setToken(null);
                     setSession(null);
+                    router.replace('/login');
                 },
-                logIn: (pw, email) => {
-                    axios
-                        .post(API_URL + '/api/login', {
-                            username: email,
-                            password: pw,
-                        }, {
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            }
-                        })
-                        .then(function (response) {
-                            if (HttpStatusCode.Accepted) {
-                                console.log(response)
-                                setSession('xx');
-                            }
-                        })
+                logIn: async (pw, email) => {
+                    try {
+                        const formData = new URLSearchParams();
+                        formData.append('username', email);
+                        formData.append('password', pw);
+                        formData.append('grant_type', 'password');
+
+                        const res = await axios.post(
+                            `${API_URL}/api/login`,
+                            formData.toString(), // ← string encodée "username=...&password=..."
+                            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+                        );
+
+                        if (res.status === HttpStatusCode.Ok) {
+                            const token = res.data.access_token; // ← string propre sans guillemets
+                            console.log('TOKEN REÇU :', token);
+                            setToken(token);
+                            setSession('xx');
+                            router.replace('/(tabs)');
+                        }
+                    } catch (err: any) {
+                        setSession(null)
+                        console.error('STATUS :', err.response?.status);
+                        console.error('DETAIL :', err.response?.data?.detail);
+                    }
                 },
                 session,
                 isLoading,
+                token,
             }}>
             {children}
         </AuthContext.Provider>
