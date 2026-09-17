@@ -76,14 +76,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     data = jsonable_encoder(user)
     print(data)
-    hashed_password = await verify_user(db=db,name=data["username"],email=data["username"])
-    print(hashed_password)
-    if not hashed_password:
+    get_user = await verify_user(db=db,name=data["username"],email=data["username"])
+    print(get_user)
+    if not get_user:
         raise HTTPException(status_code=401, detail="Sign Up")
-    if (verify_password(data["password"], hashed_password)):
+    if (verify_password(data["password"], get_user.password_hashed)):
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
         access_token = create_access_token(
-            data={"sub": data["username"]}, expires_delta=access_token_expires
+            data={"sub": get_user.name}, expires_delta=access_token_expires
         )
         return {"access_token": access_token, "token_type": "bearer"}
     else:

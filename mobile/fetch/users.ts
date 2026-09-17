@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import { GetUser } from "@/types/users";
+import { HttpStatusCode } from "axios";
 import { router } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 
@@ -20,6 +21,10 @@ export async function getUser(): Promise<GetUser | null> {
             return null
         }
         const res = await api.get('/users/me');
+        if (res.status != HttpStatusCode.Ok)
+        {
+            return null
+        }
         return res.data
     } catch (err:any) {
         console.log('Impossible de charger l\'utilisateur', err);

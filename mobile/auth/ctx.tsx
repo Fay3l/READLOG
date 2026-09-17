@@ -72,8 +72,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             formData.toString(), // ← string encodée "username=...&password=..."
                             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
                         );
-
-                        if (res.status === HttpStatusCode.Ok) {
+                        if (res.status === HttpStatusCode.Ok && res.data.access_token ) {
                             const token = res.data.access_token; // ← string propre sans guillemets
                             console.log('TOKEN REÇU :', token);
                             setToken(token);
