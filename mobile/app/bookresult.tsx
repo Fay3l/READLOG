@@ -1,10 +1,10 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useBookStore } from "@/fetch/books";
 import { AppTheme } from "@/constants/theme";
 import { useMemo } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
+import { useBookStore } from "@/types/books";
 
 export default function BookResult() {
     const theme = useTheme()

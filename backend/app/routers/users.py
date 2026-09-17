@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends  # pyright: ignore[reportMissingImports]
+from fastapi import APIRouter, Depends, HTTPException, status  # pyright: ignore[reportMissingImports]
 from typing import Annotated
 
 from app.models.users import Users
@@ -15,6 +15,13 @@ async def read():
 
 @router.get("/me")
 async def read_user_me(current_user: Annotated[Users, Depends(get_current_user)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials or expired token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if not current_user:
+        raise credentials_exception
     return current_user
 
 

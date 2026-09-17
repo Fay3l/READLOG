@@ -2,6 +2,8 @@ import { use, createContext, type PropsWithChildren } from 'react';
 import { router } from 'expo-router';
 import axios, { HttpStatusCode } from 'axios'
 import { useStorageState } from './useStorageState'
+import api from '@/lib/api';
+
 
 
 const API_URL = "http://192.168.1.155:8000"
@@ -67,8 +69,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
                         formData.append('password', pw);
                         formData.append('grant_type', 'password');
 
-                        const res = await axios.post(
-                            `${API_URL}/api/login`,
+                        const res = await api.post(
+                            '/api/login',
                             formData.toString(), // ← string encodée "username=...&password=..."
                             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
                         );

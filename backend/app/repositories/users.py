@@ -28,7 +28,7 @@ async def verify_user(db: Session, name: str, email: str) -> GetVerifyUser | Non
 
 async def get_user_by_name(name: str, db: Session) -> GetUser | None:
     res = db.query(Users).filter(
-        Users.name == name | Users.email == name).first()
+        (Users.name == name) | (Users.email == name)).first()
     if res is None:
         return None
 

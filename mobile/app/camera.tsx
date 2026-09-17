@@ -2,8 +2,9 @@ import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } f
 import { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
-import { search_books, useBookStore } from '@/fetch/books';
+import { search_books } from '@/fetch/books';
 import { Alert } from "react-native";
+import { useBookStore } from '@/types/books';
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');

@@ -5,7 +5,7 @@ import { GetReadingReminder } from './reading_reminders';
 
 
 
-type GetUserBook = {
+export type GetUserBook = {
     id: string;
     started_at: string;
     finished_at: string;

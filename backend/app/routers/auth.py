@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi.encoders import jsonable_encoder
-from jose import jwt
+from jose import ExpiredSignatureError, jwt
 from fastapi import Depends, HTTPException, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
@@ -63,7 +63,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except InvalidTokenError:
+    except (InvalidTokenError,ExpiredSignatureError) as exc:
         raise credentials_exception
     user = await get_user_by_name(name=username,db=db)
     if not user:
