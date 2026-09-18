@@ -28,3 +28,4 @@ async def read_user_me(current_user: Annotated[Users, Depends(get_current_user)]
 @router.get("/{username}")
 async def read_user(username: str):
     return {"username": username}
+

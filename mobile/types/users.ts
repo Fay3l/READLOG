@@ -23,6 +23,7 @@ export type GetUserBook = {
 }
 
 export type GetUser = {
+    id:string;
     name: string;
     email: string;
     avatar_url: string | null;

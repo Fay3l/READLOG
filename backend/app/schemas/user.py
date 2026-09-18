@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-
+from uuid import UUID
 from app.schemas.book import GetUserBook
 from app.schemas.reading_reminder import GetReadingReminder
 
@@ -11,7 +11,8 @@ class UserCreate(BaseModel):
 
 
 class GetUser(BaseModel):
-    model_config =  ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
     name: str
     email: str
     avatar_url: str

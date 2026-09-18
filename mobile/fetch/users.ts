@@ -15,6 +15,9 @@ export async function getUser(): Promise<GetUser | null> {
   } catch (err: any) {
     console.log('STATUS :', err.response?.status);
     console.log('DETAIL :', err.response?.data);
+    await SecureStore.deleteItemAsync('token')
+    await SecureStore.deleteItemAsync('session')
+    router.push('/login')
     return null;
     // ✅ le 401 est géré par l'intercepteur — pas besoin de le traiter ici
   }

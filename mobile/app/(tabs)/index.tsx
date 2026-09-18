@@ -9,6 +9,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { IconProfile } from "@/components/iconprofile";
 import { StatusButton } from "@/components/statusbuttons";
 import { CardBook } from "@/components/cardbook";
+import { useUserBook } from "@/hooks/useUserBooks";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -28,8 +29,9 @@ export default function Index() {
     router.push('./camera')
   }
   const { user, isLoading } = useCurrentUser();
-
+  const { userBooks } = useUserBook();
   if (isLoading || !user) return <ActivityIndicator />
+  if (!userBooks) return <ActivityIndicator />
   return (
     <Screen>
       <SafeAreaView
@@ -47,7 +49,7 @@ export default function Index() {
             <Text style={styles.button_text}>Camera</Text>
           </TouchableOpacity>
         </View>
-        <View style={{ flexDirection: 'row',gap:5 }}>
+        <View style={{ flexDirection: 'row', gap: 5 }}>
           <View>
             <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "all" ? theme.colors.accent.default : theme.colors.bg.banner }]} onPress={() => setState(status[0])}>
               <Text style={styles.status_button_text}>Tous</Text>
@@ -69,7 +71,12 @@ export default function Index() {
             </TouchableOpacity>
           </View>
         </View>
-        <CardBook></CardBook>
+        {userBooks.map((userbook) => {
+          return (
+            <CardBook key={userbook.id} book={userbook}></CardBook>
+          )
+        })}
+
       </SafeAreaView>
     </Screen>
 

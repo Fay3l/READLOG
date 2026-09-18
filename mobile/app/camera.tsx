@@ -84,12 +84,12 @@ export default function Camera() {
         position: 'absolute', top: 70, right: '35%', paddingHorizontal: 64, width: '100%'
       }}>
         <TouchableOpacity style={styles.button} onPress={index}>
-          <Text style={styles.text}>Back</Text>
+          <Text style={styles.text}>Retour</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.text}>Flip Camera</Text>
+          <Text style={styles.text}>Changer de caméra</Text>
         </TouchableOpacity>
       </View>
     </View>

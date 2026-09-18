@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 import axios, { HttpStatusCode } from 'axios'
 import { useStorageState } from './useStorageState'
 import api from '@/lib/api';
+import * as SecureStore from 'expo-secure-store';
+
 
 
 
@@ -34,15 +36,22 @@ export function useSession() {
     return value;
 }
 
+let globalSignOut: (() => void) | null = null;
+
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [[, token], setToken] = useStorageState('token');
 
+    const signOut = () => {
+    setToken(null);
+    setSession(null); // ✅ met à jour le state React → re-render → guard change
+    };
+    globalSignOut = signOut;
     return (
         <AuthContext.Provider
             value={{
                 signUp: (pw: string, name: string, email: string) => {
-                    axios.post(API_URL + '/api/signup',
+                    api.post('/api/signup',
                         {
                             name: name,
                             password: pw,
@@ -81,6 +90,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             setSession('xx');
                             router.replace('/(tabs)');
                         }
+                        else{
+                            signOut()
+                        }
                     } catch (err: any) {
                         setSession(null)
                         console.error('STATUS :', err.response?.status);
@@ -94,4 +106,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
             {children}
         </AuthContext.Provider>
     );
+}
+
+export function triggerSignOut() {
+  globalSignOut?.();
 }

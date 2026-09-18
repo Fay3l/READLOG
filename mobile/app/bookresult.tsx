@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
 import { useBookStore } from "@/types/books";
+import { Screen } from "@/components/screen";
 
 export default function BookResult() {
     const theme = useTheme()
@@ -19,25 +20,27 @@ export default function BookResult() {
         router.push('/camera')
     }
     return (
-        <View style={styles.container}>
-            <Text style={styles.text} >It is the correct book ?</Text>
-            <Text style={styles.text} >{book.author}</Text>
-            <Text style={styles.text} >{book?.title}</Text>
-            {book.cover_url ?
-                <Image width={110} height={165} source={{ uri: book.cover_url }}></Image>
-            :
-                <Book width={70} height={125}/>
-            }
-            
-            <View style={styles.container_buttons} >
-                <TouchableOpacity style={styles.button} onPress={camera}>
-                    <Text style={styles.text}>Retry</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={index}>
-                    <Text style={styles.text}>Valid</Text>
-                </TouchableOpacity>
+        <Screen>
+            <View style={styles.container}>
+                <Text style={styles.text} >Est ce bien ce livre ?</Text>
+                <Text style={styles.text} >{book.author}</Text>
+                <Text style={styles.text} >{book?.title}</Text>
+                {book.cover_url ?
+                    <Image width={110} height={165} source={{ uri: book.cover_url }}></Image>
+                    :
+                    <Book width={70} height={125} />
+                }
+
+                <View style={styles.container_buttons} >
+                    <TouchableOpacity style={styles.button} onPress={camera}>
+                        <Text style={styles.text}>Recommencer</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.button} onPress={index}>
+                        <Text style={styles.text}>Valider</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </Screen>
     )
 }
 
@@ -45,13 +48,14 @@ function useStyles(theme: AppTheme) {
     return useMemo(() => StyleSheet.create({
         text: {
             fontFamily: theme.fonts.playfair.regular,
-            fontSize: theme.fontSizes.md
+            fontSize: theme.fontSizes.md,
+            color: theme.colors.text.primary
         },
         container: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            gap:15
+            gap: 15
         },
         button: {
             backgroundColor: theme.colors.bg.banner,

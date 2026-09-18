@@ -4,16 +4,19 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import * as Progress from 'react-native-progress'
 import OpenBook from "@/assets/icon/open-book.svg"
 import { TagStatus } from "./tagstatus";
-import { GetUserBook } from "@/types/users";
+import { GetBook } from "@/types/books";
 
 
 interface CardBookProps{
-    book: GetUserBook
+    book: GetBook
 }
 
 export function CardBook(book:CardBookProps) {
     const theme = useTheme()
     const styles = useStyles()
+    const title = (title:string)=> {
+        return title.slice(0,20)
+    }
     return (
         <View style={styles.card}>
             <TouchableOpacity>
@@ -26,11 +29,11 @@ export function CardBook(book:CardBookProps) {
                     <View style={{ flex: 10, gap: 8 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <View style={{ flex: 1 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between',gap:5 }}>
                                     <View style={{ gap: 3 }}>
-                                        <Text style={styles.title_text}>L'étranger</Text>
-                                        <Text style={styles.author_text}>Albert Camus</Text>
-                                        <Text style={styles.category_text}>Philosophie</Text>
+                                        <Text style={styles.title_text}>{title(book.book.title)}</Text>
+                                        <Text style={styles.author_text}>{book.book.author}</Text>
+                                        <Text style={styles.category_text}>{book.book.genres}</Text>
                                     </View>
                                     <View>
                                         <TagStatus/>
@@ -66,7 +69,7 @@ function useStyles() {
             paddingVertical:20
         },
         card_book: {
-            flex: 2.5,
+            flex: 3,
             backgroundColor: theme.colors.status.finished,
             opacity:0.85,
             borderRadius: theme.radius.lg,

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.models.users import Users
-from app.repositories.books import create_book
+from app.repositories.books import create_book, get_books
 from app.database.session import get_db
 from app.routers.auth import get_current_user
 from sqlalchemy.orm import Session
 
+from app.schemas.user import GetUser
 from app.services.google_books import search_books
 
 
@@ -27,7 +28,13 @@ async def search(
 @router.post("/add")
 async def add_book(google_books_id: str,
                    status: str = "to_read",
-                   current_user: Users = Depends(get_current_user),
+                   current_user: GetUser = Depends(get_current_user),
                    db: Session = Depends(get_db)):
     print(f"User {current_user}")
     return await create_book(db, current_user, google_books_id, status)
+
+
+@router.get("/")
+async def getbooks(current_user: GetUser =Depends(get_current_user),db: Session=Depends(get_db)):
+    res = await get_books(db, current_user)
+    return res

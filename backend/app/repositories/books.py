@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from app.models.books import Books
 from app.models.user_books import UserBooks
 from app.models.users import Users
+from app.schemas.book import GetBook
+from app.schemas.user import GetUser
 from app.services.google_books import get_book_by_id
 
 
-async def create_book(db: Session, current_user: Users, google_books_id: str, status: str = "to_read"):
+async def create_book(db: Session, current_user: GetUser, google_books_id: str, status: str = "to_read"):
     book = db.query(Books).filter(
         Books.google_books_id == google_books_id).first()
     if not book:
@@ -33,3 +35,15 @@ async def create_book(db: Session, current_user: Users, google_books_id: str, st
     db.add(user_book)
     db.commit()
     return {"message": "Livre ajouté ✅", "book_id": book.id}
+
+
+async def get_books(db: Session, current_user: GetUser)-> list[GetBook] | list:
+    res = (
+        db.query(Books)
+        .join(UserBooks, UserBooks.book_id == Books.id)   # ✅ jointure explicite
+        .filter(UserBooks.user_id == current_user.id)
+        .all()
+    )
+    if not res:
+        return []
+    return [GetBook.model_validate(r) for r in res]
