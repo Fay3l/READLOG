@@ -10,31 +10,45 @@ import FileText from "@/assets/icon/file-text.svg"
 import { useMemo } from "react"
 import { useTheme } from "@/constants/themecontext"
 import * as Progress from 'react-native-progress'
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { AnimateBook } from "@/components/animatebook"
 
 export default function About() {
   const styles = useStyles()
   const theme = useTheme()
+  const { user, isLoading } = useCurrentUser();
+
+  if (isLoading || !user) {
+    return (
+      <Screen >
+        <SafeAreaView>
+          <AnimateBook></AnimateBook>
+        </SafeAreaView>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <SafeAreaView style={styles.container}>
         <TitlePage title="Statistiques" subtitle="Année" />
         <View style={{ flex: 1, marginTop: 10, marginBottom: 55, gap: 10, alignItems: 'stretch', justifyContent: 'space-evenly' }}>
           <View style={styles.card}>
-            <View style={{ marginLeft: 15, marginRight: 15, gap: 5, alignItems:'stretch' }}>
-              <View style={{flexDirection:'row', justifyContent:'space-between',alignItems:'center'}}>
-                <View style={{flex:1,flexDirection:'column',justifyContent:'space-between'}}>
+            <View style={{ marginLeft: 15, marginRight: 15, gap: 5, alignItems: 'stretch' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'space-between' }}>
                   <Text style={styles.text_hint}>Objectif annuel</Text>
                   <Text style={styles.text_muted}><Text style={styles.number_text}>2</Text> / 12 livres</Text>
                 </View>
-                <View style={{flex:1,alignItems:"flex-end",paddingVertical:10}}>
-                  <Progress.Circle  borderWidth={2} progress={0.17} indeterminate={false} color={theme.gradients.progressBar[0]}/>
+                <View style={{ flex: 1, alignItems: "flex-end", paddingVertical: 10 }}>
+                  <Progress.Circle borderWidth={2} progress={0.17} indeterminate={false} color={theme.gradients.progressBar[0]} />
                 </View>
               </View>
-              <View style={{gap:10}} >
+              <View style={{ gap: 10 }} >
                 <Progress.Bar width={null} progress={0.17} color={theme.gradients.progressBar[0]} />
                 <Text style={styles.text_muted}>10 livres restants pour atteindre l'objectif</Text>
               </View>
-              
+
             </View>
           </View>
           <View style={{ gap: 10 }}>
@@ -119,7 +133,7 @@ function useStyles() {
       fontSize: theme.fontSizes["2xl"],
       color: theme.colors.text.secondary,
     },
-    text_hint:{
+    text_hint: {
       color: theme.colors.text.hint,
       fontSize: theme.fontSizes.sm,
       fontFamily: theme.fonts.dmSans.medium

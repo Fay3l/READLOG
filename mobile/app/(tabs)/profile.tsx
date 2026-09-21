@@ -9,6 +9,7 @@ import { Screen } from "@/components/screen";
 import { TitlePage } from "@/components/titlepage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { IconProfile } from "@/components/iconprofile";
+import { AnimateBook } from "@/components/animatebook";
 
 
 
@@ -16,7 +17,17 @@ export default function Profile() {
     const Theme = useTheme()
     const { signOut } = useSession();
     const { user, isLoading } = useCurrentUser();
-    if (isLoading || !user) return <ActivityIndicator />
+
+
+    if (isLoading || !user) {
+        return (
+            <Screen >
+                <SafeAreaView>
+                    <AnimateBook></AnimateBook>
+                </SafeAreaView>
+            </Screen>
+        );
+    }
 
     return (
         <Screen>

@@ -4,12 +4,12 @@ import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { search_books } from '@/fetch/books';
 import { Alert } from "react-native";
-import { useBookStore } from '@/types/books';
+import { useBookResultStore } from '@/types/books';
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
-  const setScannedBook = useBookStore(s => s.setScannedBook)
+  const setScannedBook = useBookResultStore(s => s.setScannedBook)
   const isScanning = useRef(false);
 
   const index = () => {
@@ -60,7 +60,7 @@ export default function Camera() {
       setScannedBook(res[0]);
       console.log(
         "STORE APRES :",
-        useBookStore.getState().scannedBook
+        useBookResultStore.getState().scannedBook
       );
       router.push("/bookresult");
     } catch (error) {

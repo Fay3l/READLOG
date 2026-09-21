@@ -1,20 +1,44 @@
+import { useSession } from '@/auth/ctx';
 import { getUser } from '@/fetch/users';
-import { useUserStore } from '@/types/users';
-import { useEffect } from 'react';
+import { GetUser, useUserStore } from '@/types/users';
+import { useEffect, useState } from 'react';
 
 
 export function useCurrentUser() {
-  const { user, isLoading, setUser } = useUserStore();
+  const { session, signOut } = useSession();
+
+  const [user, setUser] = useState<GetUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Si l'utilisateur est déjà chargé → on ne rappelle pas l'API
     async function fetchUser() {
-      if (user) return;       // déjà chargé → on ne rappelle pas
-      const data = await getUser();
-      if (data) setUser(data);
-    }
-    fetchUser();
-  }, []); // ← se lance une seule fois au montage
+      setIsLoading(true);
 
-  return { user, isLoading };
+      const data = await getUser();
+
+      if (data) {
+        setUser(data);
+      } else {
+        setUser(null);
+
+        if (session) {
+          signOut();
+        }
+      }
+
+      setIsLoading(false);
+    }
+
+    if (session) {
+      fetchUser();
+    } else {
+      setUser(null);
+      setIsLoading(false);
+    }
+  }, [session]);
+
+  return {
+    user,
+    isLoading,
+  };
 }

@@ -1,12 +1,11 @@
 import { useTheme } from "@/constants/themecontext";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
 import * as Progress from 'react-native-progress'
 import OpenBook from "@/assets/icon/open-book.svg"
 import { TagStatus } from "./tagstatus";
-import { GetBook } from "@/types/books";
-
-
+import { GetBook, useBookStore } from "@/types/books";
+import { router } from "expo-router";
 interface CardBookProps {
     book: GetBook
 }
@@ -14,21 +13,28 @@ interface CardBookProps {
 export function CardBook(book: CardBookProps) {
     const theme = useTheme()
     const styles = useStyles()
+
     const title = (title: string) => {
         return title.slice(0, 20)
     }
+    const setBook = useBookStore(s => s.setBook)
 
-    const progress = (current_page:number, page_count:number)=>{    
-        return current_page/page_count
+    function handlePress() {
+        setBook(book.book)                    
+        router.push('/bookdetail')       
+    }
+
+    const progress = (current_page: number, page_count: number) => {
+        return current_page / page_count
     }
 
     return (
         <View style={styles.card}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handlePress}>
                 <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
                     {book.book.cover_url ?
                         <Image width={50} height={70} source={{ uri: book.book.cover_url }} ></Image>
-                                :
+                        :
                         <View style={styles.card_book}>
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                 <OpenBook width={25} height={25} />
@@ -53,7 +59,7 @@ export function CardBook(book: CardBookProps) {
                         </View>
 
                         <View>
-                            <Progress.Bar width={null} progress={progress(book.book.current_page,book.book.page_count)} color={theme.gradients.progressBar[0]} />
+                            <Progress.Bar width={null} progress={progress(book.book.current_page, book.book.page_count)} color={theme.gradients.progressBar[0]} />
                         </View>
                     </View>
                     <View >

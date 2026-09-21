@@ -38,7 +38,7 @@ function useStyles() {
         },
         button_secondary_text: {
             textAlign: 'center',
-            color: theme.colors.text.hint
+            color: theme.colors.text.secondary
         }
     }), [theme])
 }

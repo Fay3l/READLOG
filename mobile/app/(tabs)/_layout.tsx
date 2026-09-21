@@ -32,19 +32,27 @@ export default function TabsLayout() {
     }}>
         <Tabs.Screen name="index" options={{
             headerShown: false,
+            animation:"shift",
             tabBarIcon: () => <Books width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Bibliothèque" ></TabBarLabel>
         }}></Tabs.Screen>
         <Tabs.Screen name="stats" options={{
             headerShown: false,
+            animation:"shift",
             tabBarIcon: () => <BarChart width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Statistiques" ></TabBarLabel>
         }}></Tabs.Screen>
         <Tabs.Screen name="profile" options={{
             headerShown: false,
+            animation:"shift",
             tabBarIcon: () => <User width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Profil" ></TabBarLabel>
         }}></Tabs.Screen>
+        <Tabs.Screen name="bookdetail"  options={{
+            headerShown:false,
+            href: null,
+        }}>
+        </Tabs.Screen>
     </Tabs>;
 }
 

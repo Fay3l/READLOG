@@ -4,13 +4,13 @@ import { useMemo } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
-import { useBookStore } from "@/types/books";
+import { useBookResultStore } from "@/types/books";
 import { Screen } from "@/components/screen";
 
 export default function BookResult() {
     const theme = useTheme()
     const styles = useStyles(theme)
-    const book = useBookStore((s) => s.scannedBook)
+    const book = useBookResultStore((s) => s.scannedBook)
     if (!book) { router.back(); return null; }
     const index = () => {
         router.push('/(tabs)')

@@ -14,6 +14,7 @@ export default function Root() {
   return (
     <SessionProvider>
       <SplashScreenController />
+      <StatusBar hidden />
       <RootNavigator />
     </SessionProvider>
   );
@@ -37,23 +38,12 @@ function RootNavigator() {
           </Stack.Screen>
         </Stack.Protected>
 
-        {/* <Stack.Protected guard={!session}>
-          <Stack.Screen name="auth"
-            options={{
-              headerShown: false,
-            }}>
-          </Stack.Screen>
-        </Stack.Protected> */}
-
         <Stack.Protected guard={!session}>
           <Stack.Screen name='login'
             options={{
               headerShown: false,
             }}>
           </Stack.Screen>
-        </Stack.Protected>
-
-        <Stack.Protected guard={!session}>
           <Stack.Screen name="sign-up"
             options={{
               headerShown: false,
@@ -76,6 +66,7 @@ function RootNavigator() {
             }}>
           </Stack.Screen>
         </Stack.Protected>
+
       </Stack>
     </ThemeProvider>
 

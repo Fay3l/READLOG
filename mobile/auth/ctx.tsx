@@ -38,15 +38,20 @@ export function useSession() {
 
 let globalSignOut: (() => void) | null = null;
 
+export async function SignOut() {
+    const [, setSession] = useStorageState('session');
+    await SecureStore.deleteItemAsync("token");
+    setSession(null);
+}
+
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [[, token], setToken] = useStorageState('token');
 
-    const signOut = () => {
-    setToken(null);
-    setSession(null);
+    const signOut = async () => {
+        await SecureStore.deleteItemAsync("token");
+        setSession(null);
     };
-    globalSignOut = signOut;
     return (
         <AuthContext.Provider
             value={{
@@ -83,14 +88,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             formData.toString(), // ← string encodée "username=...&password=..."
                             { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
                         );
-                        if (res.status === HttpStatusCode.Ok && res.data.access_token ) {
+                        if (res.status === HttpStatusCode.Ok && res.data.access_token) {
                             const token = res.data.access_token; // ← string propre sans guillemets
                             setToken(token);
                             setSession('xx');
                             router.replace('/(tabs)');
-                        }
-                        else{
-                            signOut()
                         }
                     } catch (err: any) {
                         setSession(null)
@@ -108,5 +110,5 @@ export function SessionProvider({ children }: PropsWithChildren) {
 }
 
 export function triggerSignOut() {
-  globalSignOut?.();
+    globalSignOut?.();
 }

@@ -35,7 +35,7 @@ type BookStore = {
     setScannedBook: (book: BookResult | null) => void
 }
 
-export const useBookStore = create<BookStore>((set) => ({
+export const useBookResultStore = create<BookStore>((set) => ({
     scannedBook: null,
     setScannedBook: (book) => set({ scannedBook: book }),
 }))
@@ -48,4 +48,14 @@ type UserBooksStore = {
 export const useUserBookStore = create<UserBooksStore>((set) => ({
     userBooks: null,
     setUserBooks: (userbooks) => set({ userBooks: userbooks })
+}))
+
+type SingleBookStore = {
+    book: GetBook |null
+    setBook:(book:GetBook| null) => void
+}
+
+export const useBookStore = create<SingleBookStore>((set) => ({
+    book: null,
+    setBook: (ubooks:GetBook| null) => set({ book: ubooks })
 }))

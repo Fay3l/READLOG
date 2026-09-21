@@ -11,6 +11,8 @@ import { CardBook } from "@/components/cardbook";
 import { useUserBook } from "@/hooks/useUserBooks";
 import { AnimateBook } from "@/components/animatebook";
 import { GetBook } from "@/types/books";
+import { useSession } from "@/auth/ctx";
+
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -34,9 +36,6 @@ export default function Index() {
   }
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace('./login');
-    }
     if (!userBooks) {
       setBooksStatus([]);
       return;
@@ -50,7 +49,8 @@ export default function Index() {
     setBooksStatus(
       userBooks.filter((book: GetBook) => book.status === state)
     );
-  }, [userBooks, state, user]);
+  }, [userBooks, state]);
+
 
   if (isLoading || !user) {
     return (
@@ -61,6 +61,7 @@ export default function Index() {
       </Screen>
     );
   }
+
   return (
     <Screen>
       <SafeAreaView

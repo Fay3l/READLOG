@@ -9,7 +9,7 @@ export function AnimateBook() {
     return (
         <View style={{ margin: 100, top: '30%', alignItems: 'center',gap:10 }} >
 
-            <Text style={{ color: theme.colors.text.primary, fontFamily: theme.fonts.dmSans.medium, fontWeight: "bold" }}>Juste un petit instant ...</Text>
+            <Text style={{ color: theme.colors.text.primary, fontFamily: theme.fonts.dmSans.medium, fontWeight: "bold" }}>Un petit instant ...</Text>
             <LottieView
                 source={require('@/assets/animations/book.json')} // ← besoin du JSON, pas du SVG
                 autoPlay
