@@ -23,6 +23,8 @@ export type GetBook = {
     description: string;
     publisher: string;
     published_year: number;
+    status:string;
+    current_page:number;
     genres: string;
     page_count: number;
     created_at: string;

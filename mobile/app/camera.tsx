@@ -13,7 +13,7 @@ export default function Camera() {
   const isScanning = useRef(false);
 
   const index = () => {
-    router.push('/(tabs)')
+    router.replace('/(tabs)')
   }
 
   if (!permission) {

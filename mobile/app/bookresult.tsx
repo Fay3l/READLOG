@@ -12,7 +12,6 @@ export default function BookResult() {
     const styles = useStyles(theme)
     const book = useBookStore((s) => s.scannedBook)
     if (!book) { router.back(); return null; }
-    console.log("3 - BOOK RESULT :", book);
     const index = () => {
         router.push('/(tabs)')
     }

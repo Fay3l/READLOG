@@ -17,6 +17,11 @@ export function CardBook(book: CardBookProps) {
     const title = (title: string) => {
         return title.slice(0, 20)
     }
+
+    const progress = (current_page:number, page_count:number)=>{    
+        return current_page/page_count
+    }
+
     return (
         <View style={styles.card}>
             <TouchableOpacity>
@@ -40,7 +45,7 @@ export function CardBook(book: CardBookProps) {
                                         <Text style={styles.category_text}>{book.book.genres}</Text>
                                     </View>
                                     <View>
-                                        <TagStatus />
+                                        <TagStatus status={book.book.status} />
                                     </View>
                                 </View>
                             </View>
@@ -48,7 +53,7 @@ export function CardBook(book: CardBookProps) {
                         </View>
 
                         <View>
-                            <Progress.Bar width={null} progress={0.36} color={theme.gradients.progressBar[0]} />
+                            <Progress.Bar width={null} progress={progress(book.book.current_page,book.book.page_count)} color={theme.gradients.progressBar[0]} />
                         </View>
                     </View>
                     <View >

@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { Screen } from "@/components/screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TitlePage } from "@/components/titlepage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { IconProfile } from "@/components/iconprofile";
-import { StatusButton } from "@/components/statusbuttons";
 import { CardBook } from "@/components/cardbook";
 import { useUserBook } from "@/hooks/useUserBooks";
+import { AnimateBook } from "@/components/animatebook";
+import { GetBook } from "@/types/books";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -21,17 +22,45 @@ function getGreeting(): string {
 }
 
 export default function Index() {
-  const status = ["all", "reading", "finished", "to_read"]
-  const [state, setState] = useState("all")
+  const { user, isLoading } = useCurrentUser();
+  const { userBooks } = useUserBook();
+  const status = ["", "reading", "finished", "to_read"]
+  const [state, setState] = useState("")
   const styles = useIndexStyles();
+  const [booksStatus, setBooksStatus] = useState<GetBook[]>(userBooks ?? [])
   const theme = useTheme()
   const camera = () => {
     router.push('./camera')
   }
-  const { user, isLoading } = useCurrentUser();
-  const { userBooks } = useUserBook();
-  if (isLoading || !user) return <ActivityIndicator />
-  if (!userBooks) return <ActivityIndicator />
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('./login');
+    }
+    if (!userBooks) {
+      setBooksStatus([]);
+      return;
+    }
+
+    if (state === "") {
+      setBooksStatus(userBooks);
+      return;
+    }
+
+    setBooksStatus(
+      userBooks.filter((book: GetBook) => book.status === state)
+    );
+  }, [userBooks, state, user]);
+
+  if (isLoading || !user) {
+    return (
+      <Screen >
+        <SafeAreaView>
+          <AnimateBook></AnimateBook>
+        </SafeAreaView>
+      </Screen>
+    );
+  }
   return (
     <Screen>
       <SafeAreaView
@@ -46,12 +75,12 @@ export default function Index() {
 
         <View style={styles.button}>
           <TouchableOpacity onPress={camera}>
-            <Text style={styles.button_text}>Camera</Text>
+            <Text style={styles.button_text}>Ajouter à la bibliothèque</Text>
           </TouchableOpacity>
         </View>
         <View style={{ flexDirection: 'row', gap: 5 }}>
           <View>
-            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "all" ? theme.colors.accent.default : theme.colors.bg.banner }]} onPress={() => setState(status[0])}>
+            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "" ? theme.colors.accent.default : theme.colors.bg.banner }]} onPress={() => setState(status[0])}>
               <Text style={styles.status_button_text}>Tous</Text>
             </TouchableOpacity>
           </View>
@@ -67,15 +96,22 @@ export default function Index() {
           </View>
           <View >
             <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "to_read" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[3])}>
-              <Text style={styles.status_button_text}>A lire</Text>
+              <Text style={styles.status_button_text}>À lire</Text>
             </TouchableOpacity>
           </View>
         </View>
-        {userBooks.map((userbook) => {
+        {booksStatus ? booksStatus.map((userbook) => {
           return (
-            <CardBook key={userbook.id} book={userbook}></CardBook>
+            <CardBook key={userbook.id} book={userbook} />
           )
-        })}
+        }) : (
+          <View>
+            <Text></Text>
+          </View>
+        )
+
+        }
+
 
       </SafeAreaView>
     </Screen>

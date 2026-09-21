@@ -76,7 +76,7 @@ def make_book(db):
             cover_url="",
             description="",
             publisher="",
-            published_year="",
+            published_year=0,
             ** kwargs,
         )
         db.add(book)

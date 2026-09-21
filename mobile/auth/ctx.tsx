@@ -44,7 +44,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
     const signOut = () => {
     setToken(null);
-    setSession(null); // ✅ met à jour le state React → re-render → guard change
+    setSession(null);
     };
     globalSignOut = signOut;
     return (
@@ -85,7 +85,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
                         );
                         if (res.status === HttpStatusCode.Ok && res.data.access_token ) {
                             const token = res.data.access_token; // ← string propre sans guillemets
-                            console.log('TOKEN REÇU :', token);
                             setToken(token);
                             setSession('xx');
                             router.replace('/(tabs)');

@@ -1,5 +1,5 @@
 from http.client import HTTPException
-from uuid import uuid4
+from uuid import uuid4,UUID
 from sqlalchemy.orm import Session
 from app.models.books import Books
 from app.models.user_books import UserBooks
@@ -16,7 +16,8 @@ async def create_book(db: Session, current_user: GetUser, google_books_id: str, 
         data = await get_book_by_id(google_books_id)
         if not data:
             raise HTTPException(status_code=404, detail="Livre introuvable")
-        book = Books(**data.model_dump(exclude={"id","genre"}),genres=data.genre,id=uuid4())
+        book = Books(
+            **data.model_dump(exclude={"id", "genre"}), genres=data.genre, id=uuid4())
         db.add(book)
         db.flush()  # pour avoir l'id avant le commit
 
@@ -37,13 +38,24 @@ async def create_book(db: Session, current_user: GetUser, google_books_id: str, 
     return {"message": "Livre ajouté ✅", "book_id": book.id}
 
 
-async def get_books(db: Session, current_user: GetUser)-> list[GetBook] | list:
+async def get_books(db: Session, current_user: GetUser) -> list[GetBook] | list:
     res = (
-        db.query(Books)
-        .join(UserBooks, UserBooks.book_id == Books.id)   # ✅ jointure explicite
+        db.query(Books, UserBooks.status, UserBooks.current_page)
+        .join(UserBooks, UserBooks.book_id == Books.id)
         .filter(UserBooks.user_id == current_user.id)
         .all()
     )
     if not res:
         return []
-    return [GetBook.model_validate(r) for r in res]
+    print(res)
+    books = []
+    for book, status,current_page in res:
+        data = {**book.__dict__, "status": status, "current_page": current_page}
+        book_data = GetBook.model_validate(data) 
+        books.append(book_data)
+
+    return books
+
+async def remove_book(db:Session, b_id:str):
+    book_id = UUID(hex=b_id)
+    return (db.query(Books).filter(Books.id == book_id).delete(synchronize_session="evaluate"))

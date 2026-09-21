@@ -17,8 +17,10 @@ class BookResult(BaseModel):
     published_year: str | None = None
     publisher: str | None = None
     genre: str | None = None
+
+
 class GetUserBook(BaseModel):
-    model_config =  ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     started_at: datetime
     finished_at: datetime
@@ -32,17 +34,20 @@ class GetUserBook(BaseModel):
     quotes: list[GetQuote]
     reading_notes: list[GetReadingNote]
 
+
 class GetBook(BaseModel):
-    model_config =  ConfigDict(from_attributes=True)
-    id:UUID
-    google_books_id:str
-    isbn:str
-    title:str
-    author:str
-    cover_url:str
-    description:str
-    publisher:str
-    published_year:int
-    genres:str
-    page_count:int
-    created_at:datetime
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    google_books_id: str
+    isbn: str
+    title: str
+    author: str
+    cover_url: str
+    status: str | None
+    current_page: int | None
+    description: str
+    publisher: str
+    published_year: int
+    genres: str
+    page_count: int
+    created_at: datetime
