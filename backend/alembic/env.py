@@ -5,6 +5,14 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from app.database.base import Base
 
+# Ces imports enregistrent les tables dans Base.metadata
+from app.models.users import Users
+from app.models.books import Books
+from app.models.user_books import UserBooks
+from app.models.reading_reminders import ReadingReminders
+from app.models.quotes import Quotes
+from app.models.reading_notes import ReadingNotes
+
 from alembic import context
 
 load_dotenv()

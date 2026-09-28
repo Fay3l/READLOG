@@ -11,9 +11,10 @@ from pwdlib import PasswordHash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
 from ..schemas.user import UserCreate
+from ..services.email import generate_code, send_verification_email
 from ..database.session import get_db
 from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
-from ..repositories.users import create_user,verify_user,get_user_by_name
+from ..repositories.users import create_user, user_resend_code,verify_user,get_user_by_name, verify_user_email
 load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -77,7 +78,7 @@ async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Ses
     data = jsonable_encoder(user)
     print(data)
     get_user = await verify_user(db=db,name=data["username"],email=data["username"])
-    print(get_user)
+    print("--GET USER--",get_user)
     if not get_user:
         raise HTTPException(status_code=401, detail="Sign Up")
     if (verify_password(data["password"], get_user.password_hashed)):
@@ -93,15 +94,33 @@ async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Ses
 
 @router.post("/api/signup")
 async def create_login(user: UserCreate, db: Session = Depends(get_db)):
-    data = jsonable_encoder(user)
-    print(data)
-    if (data):
+    if (user):
+        code = generate_code()
+        user.password = hash_password(user.password)
         # if (connectionsql.sql.username_duplicate(data["name"])):
-        await create_user(db=db, name=data["name"], password=hash_password(data["password"]), email=data["email"])
-        # return True
-        # else:
-        #     raise HTTPException(
-        #         status_code=401, detail="Username already uses")
+        res = await create_user(db=db, uc=user,code=code,expired=datetime.now(timezone.utc) + timedelta(minutes=15))
+        if res:
+            await send_verification_email(user.email, code)
+            return {"detail": "Compte créé, vérifie ton email"}
+        raise HTTPException(
+                    status_code=400, detail="Réessayez l'inscription")
     else:
         raise HTTPException(
             status_code=400, detail="Empty username,email or password")
+
+# ── Vérification du code ──────────────────────────
+@router.post("/verify-email")
+async def verify_email(email: str, code: str, db: Session = Depends(get_db)):
+    res = await verify_user_email(email=email,db=db,code=code)
+    if res.code != 200:
+        raise HTTPException(status_code=res.code,detail=res.detail) 
+    return {"detail": "Email vérifié ✅"}
+
+# ── Renvoyer un nouveau code ───────────────────────
+@router.post("/resend-code")
+async def resend_code(email: str, db: Session = Depends(get_db)):
+    res = await user_resend_code(email=email,db=db)
+    if not res:
+        raise HTTPException(status_code=400, detail="Requête Invalide")
+    await send_verification_email(email, res.code)
+    return {"detail": "Code renvoyé"}

@@ -1,5 +1,5 @@
 """ Table User """
-import datetime
+from datetime import datetime, timezone
 from ..database.base import Base
 from typing import List  # pyright: ignore[reportMissingImports]
 from typing import Optional  # pyright: ignore[reportMissingImports]
@@ -16,11 +16,11 @@ class ReadingNotes(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     content: Mapped[str]
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc),
     )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc),
     )
     user_book_id: Mapped[UUID] = mapped_column(
         ForeignKey('user_books.id'), default=None)
