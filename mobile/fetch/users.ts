@@ -23,3 +23,4 @@ export async function getUser(): Promise<GetUser | null> {
     // ✅ le 401 est géré par l'intercepteur — pas besoin de le traiter ici
   }
 }
+

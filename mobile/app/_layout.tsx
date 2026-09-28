@@ -3,6 +3,8 @@ import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
 import { ThemeProvider, useThemeContext } from '@/constants/themecontext';
 import { StatusBar } from 'expo-status-bar';
+import { ToastProvider } from '@/components/toast/toast_context';
+import { Toast } from '@/components/toast/toast';
 
 
 export const unstable_settings = {
@@ -15,7 +17,10 @@ export default function Root() {
     <SessionProvider>
       <SplashScreenController />
       <StatusBar hidden />
-      <RootNavigator />
+      <ToastProvider>
+        <RootNavigator />
+        <Toast />
+      </ToastProvider>
     </SessionProvider>
   );
 }
@@ -39,6 +44,16 @@ function RootNavigator() {
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
+          <Stack.Screen name="verify-email"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+          <Stack.Screen name="goals"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
           <Stack.Screen name='login'
             options={{
               headerShown: false,
@@ -49,6 +64,8 @@ function RootNavigator() {
               headerShown: false,
             }}>
           </Stack.Screen>
+          
+
         </Stack.Protected>
 
         <Stack.Protected guard={!!session}>

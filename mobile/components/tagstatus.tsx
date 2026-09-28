@@ -4,10 +4,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 interface TagStatusProps {
     status: string;
+    is_active: boolean | undefined
 }
 
 
-export function TagStatus({ status }: TagStatusProps) {
+export function TagStatus({ status, is_active }: TagStatusProps) {
     const theme = useTheme()
     const styles = useStyles()
     if (status == "to_read") {
@@ -31,10 +32,17 @@ export function TagStatus({ status }: TagStatusProps) {
             </View>
         )
     }
-    if (status == "reading") {
+    else {
+        if (is_active) {
+            return (
+                <View style={[styles.tag, { backgroundColor: theme.colors.border.focus, padding: 8 }]}>
+                    <Text style={[styles.text, { color: theme.colors.text.onAccent }]}>{status}</Text>
+                </View>
+            )
+        }
         return (
-            <View style={[styles.tag, { backgroundColor: theme.colors.status.abandonedBg, }]}>
-                <Text style={[styles.text, { color: theme.colors.status.abandoned }]}>Abondonné</Text>
+            <View style={[styles.tag, { backgroundColor: theme.colors.border.card, padding: 8 }]}>
+                <Text style={[styles.text, { color: theme.colors.text.hint }]}>{status}</Text>
             </View>
         )
     }

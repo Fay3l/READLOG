@@ -12,3 +12,4 @@ class GetVerifyUser(BaseModel):
     model_config =  ConfigDict(from_attributes=True)
     name:str
     password_hashed:str
+    email_verified:bool

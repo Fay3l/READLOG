@@ -26,10 +26,9 @@ async def verify_user(db: Session, name: str, email: str) -> GetVerifyUser | Non
     print("name email: ", name, email)
     result = db.query(Users).filter(
         (Users.name == name) | (Users.email == email)).first()
-    print("---",result)
     if result is None:
         return None
-    return GetVerifyUser(name=result.name, password_hashed=result.password_hash)
+    return GetVerifyUser(name=result.name, password_hashed=result.password_hash, email_verified=result.email_verified)
 
 
 async def get_user_by_name(name: str, db: Session) -> GetUser | None:

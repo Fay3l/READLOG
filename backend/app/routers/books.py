@@ -9,7 +9,7 @@ from app.schemas.user import GetUser
 from app.services.google_books import search_books
 
 
-router = APIRouter(prefix="/books", tags=["books"])
+router = APIRouter(prefix="/api/books", tags=["books"])
 
 
 @router.get("/search")

@@ -8,6 +8,7 @@ import { ButtonPrimary } from '@/components/buttons/buttonprimary';
 import { Screen } from '@/components/screen';
 import { useTheme } from '@/constants/themecontext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StepDots } from '@/components/stepdots';
 
 export default function SignUp() {
     const { signUp: signup } = useSession();
@@ -21,7 +22,9 @@ export default function SignUp() {
     return (
         <Screen>
             <SafeAreaView style={{ flex: 1, margin: 20, gap: 15 }}>
-                <View></View>
+                <View>
+                    <StepDots current={0} total={3}></StepDots>
+                </View>
                 <View style={{gap:5}}>
                     <Text style={{ fontSize: theme.fontSizes.xl, color: theme.colors.text.primary, fontFamily: theme.fonts.playfair.regular }}>Crée ton compte</Text>
                     <Text style={{ color: theme.colors.text.secondary, fontSize: theme.fontSizes.sm }}>Etape 1 sur 3 - Tes infos</Text>

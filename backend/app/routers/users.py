@@ -4,11 +4,11 @@ from typing import Annotated
 from datetime import datetime
 from app.models.reading_reminders import ReadingReminders
 from ..database.session import get_db
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, require_verified_email
 from app.schemas.user import GetUser, OnboardingSchema
 from sqlalchemy.orm import Session
 from uuid import uuid4
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/api/users", tags=["users"])
 
 
 @router.get("/", )
@@ -36,7 +36,7 @@ async def read_user(username: str):
 @router.patch("/onboarding")
 async def complete_onboarding(
     data: OnboardingSchema,
-    current_user: Annotated[GetUser, Depends(get_current_user)],
+    current_user: Annotated[GetUser, Depends(require_verified_email)],
     db: Session = Depends(get_db)
 ):
     current_user.reading_goal = data.reading_goal
