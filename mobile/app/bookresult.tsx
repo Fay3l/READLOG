@@ -6,14 +6,25 @@ import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
 import { useBookResultStore } from "@/types/books";
 import { Screen } from "@/components/screen";
+import { add_book } from "@/fetch/books";
+import { useToast } from "@/components/toast/toast_context";
 
 export default function BookResult() {
     const theme = useTheme()
     const styles = useStyles(theme)
+    const {show} = useToast()
     const book = useBookResultStore((s) => s.scannedBook)
     if (!book) { router.back(); return null; }
-    const index = () => {
-        router.push('/(tabs)')
+    const addBook = async() => {
+        try{
+            await add_book(book.google_books_id)
+            show("Livre ajouté","success")
+            router.push('/(tabs)')
+        }
+        catch(err: any){
+            show(`Erreur: ${err}`,'error')
+        }
+        
     }
     const camera = () => {
         router.push('/camera')
@@ -21,7 +32,7 @@ export default function BookResult() {
     return (
         <Screen>
             <View style={styles.container}>
-                <Text style={styles.text} >Est ce bien ce livre ?</Text>
+                <Text style={styles.text} >Est-ce que ce livre est bien ?</Text>
                 <Text style={styles.text} >{book.author}</Text>
                 <Text style={styles.text} >{book?.title}</Text>
                 {book.cover_url ?
@@ -34,7 +45,7 @@ export default function BookResult() {
                     <TouchableOpacity style={styles.button} onPress={camera}>
                         <Text style={styles.text}>Recommencer</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={index}>
+                    <TouchableOpacity style={styles.button} onPress={addBook}>
                         <Text style={styles.text}>Valider</Text>
                     </TouchableOpacity>
                 </View>

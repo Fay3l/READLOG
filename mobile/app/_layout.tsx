@@ -1,10 +1,12 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
 import { ThemeProvider, useThemeContext } from '@/constants/themecontext';
 import { StatusBar } from 'expo-status-bar';
 import { ToastProvider } from '@/components/toast/toast_context';
 import { Toast } from '@/components/toast/toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useEffect } from 'react';
 
 
 export const unstable_settings = {
@@ -26,8 +28,27 @@ export default function Root() {
 }
 
 function RootNavigator() {
-  const { session } = useSession();
-  const { theme } = useThemeContext()
+  const { session,setSession } = useSession();
+  const { theme } = useThemeContext();
+  const { user, isLoading } = useCurrentUser();
+  useEffect(() => {
+    if (isLoading || !session || !user) return;
+
+    if (!user.email_verified) {
+      setSession(null)
+      router.replace({
+        pathname: '/verify-email',
+        params: { email: user.email },
+      });
+      return;
+    }
+
+    if (!user.onboarding_completed) {
+      router.replace('/goals');
+    }
+    // Sinon : l'utilisateur reste où il est (typiquement (tabs))
+  }, [user, isLoading, session]);
+
   return (
     <ThemeProvider>
       <Stack screenOptions={{
@@ -44,16 +65,6 @@ function RootNavigator() {
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
-          <Stack.Screen name="verify-email"
-            options={{
-              headerShown: false,
-            }}>
-          </Stack.Screen>
-          <Stack.Screen name="goals"
-            options={{
-              headerShown: false,
-            }}>
-          </Stack.Screen>
           <Stack.Screen name='login'
             options={{
               headerShown: false,
@@ -64,7 +75,11 @@ function RootNavigator() {
               headerShown: false,
             }}>
           </Stack.Screen>
-          
+          <Stack.Screen name="verify-email"
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
 
         </Stack.Protected>
 
@@ -83,6 +98,15 @@ function RootNavigator() {
             }}>
           </Stack.Screen>
         </Stack.Protected>
+        
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name='goals'
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
+        </Stack.Protected>
+
 
       </Stack>
     </ThemeProvider>

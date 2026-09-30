@@ -4,7 +4,7 @@ import axios from 'axios';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = 'http://192.168.1.155:8000';
+const API_URL = 'http://192.168.1.155:8000/api';
 
 const api = axios.create({ baseURL: API_URL });
 

@@ -19,7 +19,7 @@ class GetUser(BaseModel):
     avatar_url: str
     reading_goal: int
     preferred_genres: list[str]
-    reminder_time:    str | None = None
+    email_verified: bool
     onboarding_completed: bool
     userbooks: list[GetUserBook]
     readingreminders: list[GetReadingReminder]

@@ -5,13 +5,14 @@ import { router } from 'expo-router';
 import { search_books } from '@/fetch/books';
 import { Alert } from "react-native";
 import { useBookResultStore } from '@/types/books';
+import { useToast } from '@/components/toast/toast_context';
 
 export default function Camera() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const setScannedBook = useBookResultStore(s => s.setScannedBook)
   const isScanning = useRef(false);
-
+  const {show} =useToast()
   const index = () => {
     router.replace('/(tabs)')
   }
@@ -32,28 +33,16 @@ export default function Camera() {
   }
 
   async function searchEan13Books(event: BarcodeScanningResult) {
-    if (isScanning.current) return;
-
+    if(isScanning.current) return;
     isScanning.current = true;
 
     try {
+      if(!isScanning.current) return;
       const res = await search_books(event.data);
 
       if (!res || res.length === 0) {
         isScanning.current = false;
-        Alert.alert(
-          "Not Find Book",
-          `Not book for ISBN ${event.data}.`,
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                isScanning.current = false;
-              },
-            },
-          ]
-        );
-        router.push('/(tabs)');
+        show('Livre non trouvé','error')
         return;
       }
 

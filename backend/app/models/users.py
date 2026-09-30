@@ -27,7 +27,7 @@ class Users(Base):
     )
     email_verified:       Mapped[bool] = mapped_column(default=False)
     verification_code:    Mapped[str | None] = mapped_column(default=None)
-    verification_expires: Mapped[datetime | None] = mapped_column(default=None)
+    verification_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     onboarding_completed: Mapped[bool] = mapped_column(default=False)
     reading_goal:         Mapped[int] = mapped_column(default=4)
     preferred_genres:     Mapped[list[str]] = mapped_column(JSON,default_factory=list)

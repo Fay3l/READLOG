@@ -12,6 +12,13 @@ interface LabelProps {
 export function Label({value,name,setValue}: LabelProps){
     const styles = useStyles()
     const [isFocused, setIsFocused] = useState(false)
+    const type =()=>{
+        if(name === "Mot de passe")
+            return "visible-password"
+        if(name === "E-mail")
+            return "email-address"
+        return "default"
+    }
     return(
         <View>
             <Text style={styles.name}>{name}</Text>
@@ -19,6 +26,7 @@ export function Label({value,name,setValue}: LabelProps){
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onChangeText={setValue}
+                keyboardType={type()}
                 value={value}
                 style={[styles.text_input, isFocused && styles.text_input_focus]}
             />

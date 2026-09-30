@@ -72,6 +72,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     print(user)
     return user
 
+
 async def require_verified_email(current_user: GetUser = Depends(get_current_user)):
     if not current_user.email_verified:
         raise HTTPException(status_code=403, detail="Email non vérifié")
@@ -104,7 +105,11 @@ async def create_login(user: UserCreate, db: Session = Depends(get_db)):
         code = generate_code()
         user.password = hash_password(user.password)
         # if (connectionsql.sql.username_duplicate(data["name"])):
-        res = await create_user(db=db, uc=user, code=code, expired=datetime.now(timezone.utc) + timedelta(minutes=15))
+        now = datetime.now()
+        print('NOW AU MOMENT DU CALCUL:', now)
+        expired = now + timedelta(minutes=15)
+        print('EXPIRED CALCULÉ:', expired)
+        res = await create_user(db=db, uc=user, code=code, expired=expired)
         if res:
             await send_verification_email(user.email, code)
             return {"detail": "Compte créé, vérifie ton email", "code": code}
@@ -120,9 +125,14 @@ async def create_login(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/api/verify-email")
 async def verify_email(email: str, code: str, db: Session = Depends(get_db)):
     res = await verify_user_email(email=email, db=db, code=code)
-    if res.code != 200:
-        raise HTTPException(status_code=res.code, detail=res.detail)
-    return {"detail": "Email vérifié ✅"}
+    if res["code"] != 200:
+        raise HTTPException(status_code=res["code"], detail=res["detail"])
+    get_user = await verify_user(db=db, name="", email=email)
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
+    access_token = create_access_token(
+        data={"sub": get_user.name}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 # ── Renvoyer un nouveau code ───────────────────────
 
@@ -132,5 +142,6 @@ async def resend_code(email: str, db: Session = Depends(get_db)):
     res = await user_resend_code(email=email, db=db)
     if not res:
         raise HTTPException(status_code=400, detail="Requête Invalide")
-    await send_verification_email(email, res.code)
-    return {"detail": "Code renvoyé"}
+
+    # await send_verification_email(email, res.code)
+    return {"detail": res["code"]}

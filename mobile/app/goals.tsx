@@ -7,9 +7,14 @@ import { useState } from "react";
 import { TimePickerField } from '@/components/timepickerfield'
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "@/lib/api";
+import { router } from "expo-router";
+import { useToast } from "@/components/toast/toast_context";
+
 
 export default function Goals() {
     const theme = useTheme()
+    const {show} = useToast()
     const [readingGoal, setReadingGoal] = useState(4)
     let genres = {
         "roman": false,
@@ -30,8 +35,8 @@ export default function Goals() {
         "sun": false,
     }
     const [reminderDays, setReminderDays] = useState(days)
-    const complete_onboarding = () => {
-        let onboarding = {
+    const complete_onboarding = async () => {
+        const onboarding = {
             "reading_goal": readingGoal,
             "preferred_genres": Object.entries(preferredGenres)
                 .filter(([, isPreferred]) => isPreferred)
@@ -41,7 +46,14 @@ export default function Goals() {
                 .filter(([, isReminder]) => isReminder)
                 .map(([day]) => day),
         }
-        console.log(onboarding)
+        try {
+            await api.patch('/users/onboarding', onboarding);
+
+            router.replace('/(tabs)');            
+        } catch (err: any) {
+            show('Erreur onboarding :', err.response?.data?.detail)
+            console.error('Erreur onboarding :', err.response?.data?.detail);
+        }
     }
     return (
         <Screen>
@@ -116,7 +128,7 @@ export default function Goals() {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <ButtonPrimary style={{ marginTop: 15 }} title='Commencer →' onPress={complete_onboarding}></ButtonPrimary>
+                <ButtonPrimary style={{ marginTop: 15 }} title='Commencer →' onPress={() => { void complete_onboarding(); }}></ButtonPrimary>
             </SafeAreaView>
         </Screen>
     )

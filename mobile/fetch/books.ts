@@ -3,14 +3,13 @@ import { BookResult, GetBook } from "@/types/books";
 
 
 
-const API_URL = process.env['API_URL'] || "http://192.168.1.155:8000/books"
 
 export async function search_books(
   search: string
 ): Promise<BookResult[] | null> {
   try {
     const response = await api.get<BookResult[]>(
-      API_URL + "/search",
+      "/books/search",
       {
         params: {
           q: search,
@@ -31,5 +30,15 @@ export async function get_books() {
   }
   catch (error) {
     return []
+  }
+}
+
+export async function add_book(gb_id:string){
+  try {
+    const res = await api.post(`/books/add?google_books_id=${gb_id}`)
+    if(res.status == 200) await get_books()
+  }
+  catch (error){
+    throw error
   }
 }

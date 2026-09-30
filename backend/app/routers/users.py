@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 from datetime import datetime
 from app.models.reading_reminders import ReadingReminders
+from app.repositories.readingreminders import create_reading_reminders
 from ..database.session import get_db
 from app.routers.auth import get_current_user, require_verified_email
 from app.schemas.user import GetUser, OnboardingSchema
@@ -39,25 +40,7 @@ async def complete_onboarding(
     current_user: Annotated[GetUser, Depends(require_verified_email)],
     db: Session = Depends(get_db)
 ):
-    current_user.reading_goal = data.reading_goal
-    current_user.preferred_genres = data.preferred_genres
-    current_user.onboarding_completed = True
-
-    if data.reminder_time:
-        remind_at = datetime.strptime(
-            data.reminder_time,
-            "%H:%M"
-        ).time()
-
-        reminder = ReadingReminders(
-            id=uuid4(),
-            user_id=current_user.id,
-            remind_at=remind_at,
-            days=data.reminder_days or [],
-            is_active=True,
-        )
-
-        db.add(reminder)
-
-    db.commit()
+    
+    
+    await create_reading_reminders(user=current_user,data=data,db=db)
     return {"message": "Onboarding terminé ✅"}

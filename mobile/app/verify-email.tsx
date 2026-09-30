@@ -16,18 +16,21 @@ import { useToast } from '@/components/toast/toast_context';
 import { Screen } from '@/components/screen';
 import api from '@/lib/api';
 import { StepDots } from '@/components/stepdots';
+import { useSession } from '@/auth/ctx';
+import { useStorageState } from '@/auth/useStorageState';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30; // secondes
 
 export default function VerifyEmail() {
-  const theme  = useTheme();          // hooks tous en haut
+  const theme = useTheme();          // hooks tous en haut
   const styles = useStyles();
+  const [[isLoading, session], setSession] = useStorageState('session');
+  const [[, token], setToken] = useStorageState('token');
   const { show } = useToast();
   const { email } = useLocalSearchParams<{ email: string }>();
-
-  const [digits, setDigits]   = useState<string[]>(Array(CODE_LENGTH).fill(''));
-  const [error, setError]     = useState('');
+  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
@@ -87,11 +90,18 @@ export default function VerifyEmail() {
     setLoading(true);
     setError('');
     try {
-      await api.post('/api/verify-email', { email, code });
-      show('Email vérifié 🎉', 'success');
-      router.replace('/goals');
+      console.log(code)
+      const res = await api.post(`/verify-email/?email=${email}&code=${code}`);
+      if (res.data.access_token) {
+        show('Email vérifié 🎉', 'success');
+        setToken(res.data.access_token)
+        setSession('xx')
+        router.replace('/goals');
+      }
+
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? 'Code incorrect');
+      console.log(err)
+      setError('Code incorrect');
       setDigits(Array(CODE_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } finally {
@@ -102,8 +112,9 @@ export default function VerifyEmail() {
   async function handleResend() {
     if (cooldown > 0) return;
     try {
-      await api.post('/api/resend-code', { email });
-      show('Un nouveau code a été envoyé', 'info');
+      const res = await api.post(`/api/resend-code/?email=${email}`);
+      console.log(res.data?.detail)
+      show('res.data as string', 'info');
       setCooldown(RESEND_COOLDOWN);
     } catch {
       show("Impossible d'envoyer le code, réessaie", 'error');

@@ -46,8 +46,7 @@ async def user_resend_code(db: Session, email:str):
        return {}
     code = generate_code()
     user.verification_code = code
-    user.verification_expires = datetime.now(
-        timezone.utc) + timedelta(minutes=15)
+    user.verification_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
     return {"code":code,"email":email}
 
@@ -56,8 +55,10 @@ async def verify_user_email(email: str, code: str, db: Session):
     if not user:
         return {"code":404,"detail":"Utilisateur introuvable"}
     if user.verification_code != code:
+        print({"code":400,"detail":"Code incorrect"})
         return {"code":400,"detail":"Code incorrect"}
-    if datetime.now(timezone.utc) > user.verification_expires:
+    if datetime.now() > user.verification_expires:
+        print({"code":400,"detail":"Code expiré"})
         return {"code":400,"detail":"Code expiré"}
     user.email_verified    = True
     user.verification_code = None

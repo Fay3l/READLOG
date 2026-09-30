@@ -6,42 +6,45 @@ import { GetReadingReminder } from './reading_reminders';
 
 
 export type GetUserBook = {
-    id: string;
-    started_at: string;
-    finished_at: string;
-    status: string;
-    cover_url:string;
-    personal_note: string;
-    rating: number;
-    current_page: number;
-    updated_at:string ;
-    created_at: string;
-    user_id: string;
-    book_id: string;
-    quotes: GetQuote[]
-    reading_notes: GetReadingNote[]
+  id: string;
+  started_at: string;
+  finished_at: string;
+  status: string;
+  cover_url: string;
+  personal_note: string;
+  rating: number;
+  current_page: number;
+  updated_at: string;
+  created_at: string;
+  user_id: string;
+  book_id: string;
+  quotes: GetQuote[]
+  reading_notes: GetReadingNote[]
 }
 
 export type GetUser = {
-    id:string;
-    name: string;
-    email: string;
-    avatar_url: string | null;
-    reading_goal: number;
-    userbooks: GetUserBook[];
-    readingreminders: GetReadingReminder[];
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  reading_goal: number;
+  preferred_genres: [];
+  email_verified: boolean;
+  onboarding_completed:boolean;
+  userbooks: GetUserBook[];
+  readingreminders: GetReadingReminder[];
 };
 
 type UserStore = {
-  user:      GetUser | null;
+  user: GetUser | null;
   isLoading: boolean;
-  setUser:   (user: GetUser) => void;
+  setUser: (user: GetUser) => void;
   clearUser: () => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({
-  user:      null,
+  user: null,
   isLoading: false,
-  setUser:   (user) => set({ user }),
+  setUser: (user) => set({ user }),
   clearUser: () => set({ user: null }),
 }));

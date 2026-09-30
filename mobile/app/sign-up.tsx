@@ -36,7 +36,6 @@ export default function SignUp() {
                     console.log(name, password, email)
                     signup(password, name, email);
                     // Navigate after signing in. You may want to tweak this to ensure sign-in is successful before navigating.
-                    router.replace("/(tabs)");
                 }}></ButtonPrimary>
                 <View style={{ position: 'absolute', bottom: '7%', left: '20%', right: '20%' }}>
                     <View style={{ alignItems: 'center' }}>

@@ -7,7 +7,7 @@ const {signOut}= useSession()
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
-    console.log('INTERCEPTEUR 401 :', err.response?.status);
+    console.log('INTERCEPTEUR 401 :', err.response?.detail);
     if (err.response?.status === 401) {
       console.log("SIGN OUT")
       signOut()
