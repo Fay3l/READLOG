@@ -12,18 +12,20 @@ import { useToast } from '@/components/toast/toast_context';
 
 
 const AuthContext = createContext<{
-    signUp: (pw: string, user: string, email: string) => void;
+    signUp: (pw: string, user: string, email: string) => Promise<string | null>;
     signOut: () => void;
     logIn: (pw: string, email: string) => void;
-    setSession:(s:string | null)=>void;
+    verifyemail: (code: string, email: string) => void;
+    setSession: (s: string | null) => void;
     session?: string | null;
     isLoading: boolean;
     token?: string | null;
 }>({
-    signUp: () => null,
+    signUp: () => Promise.resolve(null),
     signOut: () => null,
     logIn: () => null,
     setSession: () => null,
+    verifyemail: () => null,
     session: null,
     isLoading: false,
     token: null,
@@ -47,7 +49,7 @@ export async function SignOut() {
     setSession(null);
 }
 
-export function SetSessionNull(){
+export function SetSessionNull() {
     const [, setSession] = useStorageState('session');
     setSession(null);
 }
@@ -56,30 +58,26 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [[, token], setToken] = useStorageState('token');
     const { show } = useToast();
-    
+
     return (
         <AuthContext.Provider
             value={{
-                signUp: (pw: string, name: string, email: string) => {
-                    api.post('/signup',
-                        {
-                            name: name,
-                            password: pw,
-                            email: email
-                        }
-                    )
-                        .then((response) => {
-                            if (response.status == 200) {
-                                console.log(response.data)
-                                show(response.data.code, 'success')
-                                router.push({
-                                    pathname: '/verify-email',
-                                    params: { email: email },
-                                })
+                signUp: async (pw: string, name: string, email: string) => {
+                    try {
+                        const res = await api.post('/signup',
+                            {
+                                name: name,
+                                password: pw,
+                                email: email
                             }
-
-                        })
-
+                        )
+                        if(!res.data.code)return null;
+                        return res.data.code ?? "Compte inscrit"
+                    }
+                    catch{
+                        return null
+                    }
+                    
                 },
                 signOut: () => {
                     setToken(null);
@@ -102,6 +100,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             const token = res.data.access_token; // ← string propre sans guillemets
                             setToken(token);
                             setSession('xx');
+                            show("Connecté", 'success')
                             router.replace('/(tabs)');
                         }
                     } catch (err: any) {
@@ -110,7 +109,22 @@ export function SessionProvider({ children }: PropsWithChildren) {
                         console.error('DETAIL :', err.response?.data?.detail);
                     }
                 },
-                setSession:(s) => {
+                verifyemail: async (code, email) => {
+                    try {
+                        console.log(code)
+                        const res = await api.post(`/verify-email/?email=${email}&code=${code}`);
+                        if (res.data.access_token) {
+                            setToken(res.data.access_token)
+                            setSession('xx')
+
+                            router.push('/goals');
+                        }
+
+                    } catch (err: any) {
+                        console.log(err)
+                    }
+                },
+                setSession: (s) => {
                     setSession(s)
                 },
                 session,

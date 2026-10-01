@@ -25,7 +25,7 @@ const RESEND_COOLDOWN = 30; // secondes
 export default function VerifyEmail() {
   const theme = useTheme();          // hooks tous en haut
   const styles = useStyles();
-  const [[isLoading, session], setSession] = useStorageState('session');
+  const {verifyemail,setSession} = useSession()
   const [[, token], setToken] = useStorageState('token');
   const { show } = useToast();
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -90,19 +90,12 @@ export default function VerifyEmail() {
     setLoading(true);
     setError('');
     try {
-      console.log(code)
-      const res = await api.post(`/verify-email/?email=${email}&code=${code}`);
-      if (res.data.access_token) {
-        show('Email vérifié 🎉', 'success');
-        setToken(res.data.access_token)
-        setSession('xx')
-        router.replace('/goals');
-      }
-
+      verifyemail(code, email)
+      show('Email vérifié 🎉', 'success');
     } catch (err: any) {
       console.log(err)
       setError('Code incorrect');
-      setDigits(Array(CODE_LENGTH).fill(''));
+      setDigits(new Array(CODE_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
