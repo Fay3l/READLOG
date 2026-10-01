@@ -17,7 +17,7 @@ export default function BookResult() {
     if (!book) { router.back(); return null; }
     const addBook = async() => {
         try{
-            await add_book(book.google_books_id)
+            await add_book(book)
             show("Livre ajouté","success")
             router.push('/(tabs)')
         }

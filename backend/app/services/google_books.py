@@ -1,5 +1,6 @@
 import os
 import httpx
+import asyncio
 from app.schemas.book import BookResult
 
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
@@ -39,22 +40,36 @@ def _parse_item(item: dict) -> BookResult | None:
     )
 
 
-async def search_books(query: str, max_results: int = 10) -> list[BookResult]:
-    """Recherche texte libre ou ISBN"""
+async def search_books(query: str, max_results: int = 10, retries: int = 2) -> list[BookResult]:
+    """Recherche texte libre ou ISBN, avec retry sur erreurs 5xx"""
     params = {
         "q": query,
         "maxResults": max_results,
         "printType": "books",
         "key": API_KEY,
     }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(GOOGLE_BOOKS_URL, params=params, timeout=5.0)
-        response.raise_for_status()
 
-    items = response.json().get("items", [])
-    print(f"Google Books API: {items} résultats pour '{query}'")
-    results = [_parse_item(item) for item in items]
-    return [r for r in results if r is not None]
+    last_error = None
+    for attempt in range(retries + 1):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(GOOGLE_BOOKS_URL, params=params, timeout=5.0)
+                response.raise_for_status()
+
+            items = response.json().get("items", [])
+            results = [_parse_item(item) for item in items]
+            return [r for r in results if r is not None]
+
+        except httpx.HTTPStatusError as e:
+            last_error = e
+            if e.response.status_code >= 500 and attempt < retries:
+                # ✅ Google est instable → on réessaie après un court délai
+                await asyncio.sleep(0.5 * (attempt + 1))  # backoff progressif
+                continue
+            # 4xx (clé invalide, quota...) → on ne réessaie pas, on relance direct
+            raise
+
+    raise last_error
 
 
 async def get_book_by_id(google_books_id: str) -> BookResult | None:

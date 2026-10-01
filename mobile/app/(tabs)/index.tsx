@@ -10,8 +10,9 @@ import { IconProfile } from "@/components/iconprofile";
 import { CardBook } from "@/components/cardbook";
 import { useUserBook } from "@/hooks/useUserBooks";
 import { AnimateBook } from "@/components/animatebook";
-import { GetBook } from "@/types/books";
+import { GetBook, useUserBookStore } from "@/types/books";
 import { useSession } from "@/auth/ctx";
+import { useUserStore } from "@/types/users";
 
 
 function getGreeting(): string {
@@ -24,8 +25,8 @@ function getGreeting(): string {
 }
 
 export default function Index() {
-  const { user, isLoading } = useCurrentUser();
-  const { userBooks } = useUserBook();
+  const { user, isLoading } = useUserStore();
+  const { userBooks } = useUserBookStore();
   const status = ["", "reading", "finished", "to_read"]
   const [state, setState] = useState("")
   const styles = useIndexStyles();

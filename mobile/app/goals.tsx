@@ -48,7 +48,6 @@ export default function Goals() {
         }
         try {
             await api.patch('/users/onboarding', onboarding);
-
             router.replace('/(tabs)');            
         } catch (err: any) {
             show('Erreur onboarding :', err.response?.data?.detail)

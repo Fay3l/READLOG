@@ -1,33 +1,42 @@
 import { useSession } from '@/auth/ctx';
 import { getUser } from '@/fetch/users';
-import { GetUser } from '@/types/users';
+import { GetUser, useUserStore } from '@/types/users';
 import { useEffect, useState } from 'react';
 
 
 export function useCurrentUser() {
-  const { session,token, signOut } = useSession();
+  const { session, token, signOut } = useSession();
 
-  const [user, setUser] = useState<GetUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, setUser, isLoading, setLoading } = useUserStore();
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchUser() {
-      setIsLoading(true);
-      console.log(token)
+      setLoading(true);
       const data = await getUser();
 
+      if (cancelled) return; // évite de mettre à jour un composant démonté
+
       if (data) {
-        console.log(data)
         setUser(data);
-      } else {
+      } else if (session) {
+        // ✅ ne déclenche signOut que si on pensait être connecté
         setUser(null);
         signOut();
       }
 
-      setIsLoading(false);
+      setLoading(false);
     }
 
-    void fetchUser();
+    if (session) {
+      void fetchUser();
+    } else {
+      setUser(null);
+      setLoading(false);
+    }
+
+    return () => { cancelled = true; };
   }, [session]);
 
   return {

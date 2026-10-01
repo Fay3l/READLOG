@@ -10,7 +10,7 @@ export async function getUser(): Promise<GetUser | null> {
   try {
     
     // ✅ l'intercepteur injecte le token automatiquement
-    const res = await api.get('/users/me');
+    const res = await api.get<GetUser>('/users/me');
     return res.data;
   } catch (err: any) {
     console.log('STATUS :', err.response?.detail);

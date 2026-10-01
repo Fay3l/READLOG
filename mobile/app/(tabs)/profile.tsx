@@ -10,13 +10,14 @@ import { TitlePage } from "@/components/titlepage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { IconProfile } from "@/components/iconprofile";
 import { AnimateBook } from "@/components/animatebook";
+import { useUserStore } from "@/types/users";
 
 
 
 export default function Profile() {
     const Theme = useTheme()
     const { signOut } = useSession();
-    const { user, isLoading } = useCurrentUser();
+    const { user, isLoading } = useUserStore();
 
 
     if (isLoading || !user) {

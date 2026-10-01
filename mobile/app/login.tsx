@@ -8,6 +8,7 @@ import { Screen } from "@/components/screen";
 import GoogleIcon from "@/assets/icon/google-icon.svg"
 import AppleIcon from "@/assets/icon/apple-logo.svg"
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useToast } from "@/components/toast/toast_context";
 
 export default function LogIn() {
     const { logIn: login } = useSession();
@@ -15,6 +16,7 @@ export default function LogIn() {
     const [email, setEmail] = React.useState('')
     const styles = useStyles()
     const theme = useTheme()
+    const { show } = useToast();
     const signUp = ()=>{
         router.push("/sign-up")
     }
@@ -38,7 +40,7 @@ export default function LogIn() {
                     <TouchableOpacity style={styles.button_style} onPress={() => {
                         console.log(password, email)
                         login(password, email);
-                        // Navigate after signing in. You may want to tweak this to ensure sign-in is successful before navigating.
+                        show('Connecté','success')
                         router.replace("/(tabs)");
                     }}>
                         <Text style={styles.button_text}>

@@ -4,11 +4,10 @@ import axios, { HttpStatusCode } from 'axios'
 import { useStorageState } from './useStorageState'
 import api from '@/lib/api';
 import * as SecureStore from 'expo-secure-store';
-import { useToast } from '@/components/toast/toast_context';
-
-
-
-
+import { useUserStore } from '@/types/users';
+import { getUser } from '@/fetch/users';
+import { get_books } from '@/fetch/books';
+import { useUserBookStore } from '@/types/books';
 
 
 const AuthContext = createContext<{
@@ -49,16 +48,12 @@ export async function SignOut() {
     setSession(null);
 }
 
-export function SetSessionNull() {
-    const [, setSession] = useStorageState('session');
-    setSession(null);
-}
 
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [[, token], setToken] = useStorageState('token');
-    const { show } = useToast();
-
+    const { setUser } = useUserStore();
+    const { setUserBooks } = useUserBookStore();
     return (
         <AuthContext.Provider
             value={{
@@ -100,13 +95,15 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             const token = res.data.access_token; // ← string propre sans guillemets
                             setToken(token);
                             setSession('xx');
-                            show("Connecté", 'success')
+                            const user = await getUser()
+                            setUser(user)
+                            const books = await get_books()
+                            setUserBooks(books)
                             router.replace('/(tabs)');
                         }
                     } catch (err: any) {
                         setSession(null)
-                        console.error('STATUS :', err.response?.status);
-                        console.error('DETAIL :', err.response?.data?.detail);
+                        throw err.response?.data?.detail
                     }
                 },
                 verifyemail: async (code, email) => {

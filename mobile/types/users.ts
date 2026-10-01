@@ -38,13 +38,15 @@ export type GetUser = {
 type UserStore = {
   user: GetUser | null;
   isLoading: boolean;
-  setUser: (user: GetUser) => void;
+  setLoading: (state:boolean) => void
+  setUser: (user: GetUser | null) => void;
   clearUser: () => void;
 };
 
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
   isLoading: false,
+  setLoading: (s) => set({ isLoading: s }),
   setUser: (user) => set({ user }),
   clearUser: () => set({ user: null }),
 }));

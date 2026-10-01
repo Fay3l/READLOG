@@ -12,7 +12,7 @@ export default function Camera() {
   const [permission, requestPermission] = useCameraPermissions();
   const setScannedBook = useBookResultStore(s => s.setScannedBook)
   const isScanning = useRef(false);
-  const {show} =useToast()
+  const { show } = useToast()
   const index = () => {
     router.replace('/(tabs)')
   }
@@ -33,24 +33,19 @@ export default function Camera() {
   }
 
   async function searchEan13Books(event: BarcodeScanningResult) {
-    if(isScanning.current) return;
+    if (isScanning.current) return;
     isScanning.current = true;
 
     try {
-      if(!isScanning.current) return;
       const res = await search_books(event.data);
 
       if (!res || res.length === 0) {
-        isScanning.current = false;
-        show('Livre non trouvé','error')
+        isScanning.current = false;  // ✅ déjà fait, bien
+        show('Livre non trouvé', 'error');
         return;
       }
 
       setScannedBook(res[0]);
-      console.log(
-        "STORE APRES :",
-        useBookResultStore.getState().scannedBook
-      );
       router.push("/bookresult");
     } catch (error) {
       console.error(error);

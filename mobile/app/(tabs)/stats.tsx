@@ -12,11 +12,12 @@ import { useTheme } from "@/constants/themecontext"
 import * as Progress from 'react-native-progress'
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { AnimateBook } from "@/components/animatebook"
+import { useUserStore } from "@/types/users"
 
 export default function About() {
   const styles = useStyles()
   const theme = useTheme()
-  const { user, isLoading } = useCurrentUser();
+  const { user, isLoading } = useUserStore();
 
   if (isLoading || !user) {
     return (
