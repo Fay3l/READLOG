@@ -10,7 +10,6 @@ import FileText from "@/assets/icon/file-text.svg"
 import { useMemo } from "react"
 import { useTheme } from "@/constants/themecontext"
 import * as Progress from 'react-native-progress'
-import { useCurrentUser } from "@/hooks/useCurrentUser"
 import { AnimateBook } from "@/components/animatebook"
 import { useUserStore } from "@/types/users"
 

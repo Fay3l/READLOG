@@ -106,7 +106,7 @@ function RootNavigator() {
             }}>
           </Stack.Screen>
         </Stack.Protected>
-
+        
 
       </Stack>
     </ThemeProvider>

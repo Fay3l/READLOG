@@ -71,6 +71,23 @@ async def search_books(query: str, max_results: int = 10, retries: int = 2) -> l
 
     raise last_error
 
+# async def search_books(query: str, max_results: int = 10) -> list[BookResult]:
+#     """Recherche texte libre ou ISBN"""
+#     params = {
+#         "q": query,
+#         "maxResults": max_results,
+#         "printType": "books",
+#         "key": API_KEY,
+#     }
+#     async with httpx.AsyncClient() as client:
+#         response = await client.get(GOOGLE_BOOKS_URL, params=params, timeout=5.0)
+#         response.raise_for_status()
+
+#     items = response.json().get("items", [])
+#     print(f"Google Books API: {items} résultats pour '{query}'")
+#     results = [_parse_item(item) for item in items]
+#     return [r for r in results if r is not None]
+
 
 async def get_book_by_id(google_books_id: str) -> BookResult | None:
     """Récupérer un seul livre par ID"""
@@ -81,3 +98,4 @@ async def get_book_by_id(google_books_id: str) -> BookResult | None:
             return None
         response.raise_for_status()
     return _parse_item(response.json())
+

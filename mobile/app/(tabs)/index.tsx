@@ -5,13 +5,10 @@ import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { Screen } from "@/components/screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TitlePage } from "@/components/titlepage";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { IconProfile } from "@/components/iconprofile";
 import { CardBook } from "@/components/cardbook";
-import { useUserBook } from "@/hooks/useUserBooks";
 import { AnimateBook } from "@/components/animatebook";
 import { GetBook, useUserBookStore } from "@/types/books";
-import { useSession } from "@/auth/ctx";
 import { useUserStore } from "@/types/users";
 
 
@@ -32,8 +29,8 @@ export default function Index() {
   const styles = useIndexStyles();
   const [booksStatus, setBooksStatus] = useState<GetBook[]>(userBooks ?? [])
   const theme = useTheme()
-  const camera = () => {
-    router.push('./camera')
+  const searchbooks = () => {
+    router.push('/searchbooks')
   }
 
   useEffect(() => {
@@ -41,7 +38,7 @@ export default function Index() {
       setBooksStatus([]);
       return;
     }
-
+    console.log(userBooks)
     if (state === "") {
       setBooksStatus(userBooks);
       return;
@@ -76,7 +73,7 @@ export default function Index() {
         </View>
 
         <View style={styles.button}>
-          <TouchableOpacity onPress={camera}>
+          <TouchableOpacity onPress={searchbooks}>
             <Text style={styles.button_text}>Ajouter à la bibliothèque</Text>
           </TouchableOpacity>
         </View>
@@ -104,7 +101,7 @@ export default function Index() {
         </View>
         {booksStatus ? booksStatus.map((userbook) => {
           return (
-            <CardBook key={userbook.id} book={userbook} />
+            <CardBook key={userbook.id} book={userbook} page="/(tabs)" />
           )
         }) : (
           <View>
@@ -127,7 +124,7 @@ function useIndexStyles() {
     container: {
       flex: 1,
       gap: 15,
-      margin: 15,
+      margin: 20,
     },
     secondary_text: {
       fontFamily: theme.fonts.playfair.regular,

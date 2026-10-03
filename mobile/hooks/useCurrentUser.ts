@@ -1,11 +1,11 @@
 import { useSession } from '@/auth/ctx';
 import { getUser } from '@/fetch/users';
-import { GetUser, useUserStore } from '@/types/users';
-import { useEffect, useState } from 'react';
+import { useUserStore } from '@/types/users';
+import { useEffect } from 'react';
 
 
 export function useCurrentUser() {
-  const { session, token, signOut } = useSession();
+  const { session, signOut } = useSession();
 
   const { user, setUser, isLoading, setLoading } = useUserStore();
 

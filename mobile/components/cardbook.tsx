@@ -1,5 +1,5 @@
 import { useTheme } from "@/constants/themecontext";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
 import * as Progress from 'react-native-progress'
 import OpenBook from "@/assets/icon/open-book.svg"
@@ -7,25 +7,22 @@ import { TagStatus } from "./tagstatus";
 import { GetBook, useBookStore } from "@/types/books";
 import { router } from "expo-router";
 interface CardBookProps {
-    book: GetBook
+    readonly book: GetBook
+    readonly page: string
 }
 
 export function CardBook(book: CardBookProps) {
     const theme = useTheme()
     const styles = useStyles()
-
     const title = (title: string) => {
         return title.slice(0, 20)
     }
     const setBook = useBookStore(s => s.setBook)
 
     function handlePress() {
-        setBook(book.book)                    
-        router.push('/bookdetail')       
-    }
-
-    const progress = (current_page: number, page_count: number) => {
-        return current_page / page_count
+        const selectedBook = book.book as GetBook
+        setBook(selectedBook)
+        router.push({ pathname: '/bookdetail', params: { page: book.page } })
     }
 
     return (
@@ -48,19 +45,23 @@ export function CardBook(book: CardBookProps) {
                                     <View style={{ gap: 3 }}>
                                         <Text style={styles.title_text}>{title(book.book.title)}</Text>
                                         <Text style={styles.author_text}>{book.book.author}</Text>
-                                        <Text style={styles.category_text}>{book.book.genres}</Text>
+                                        <Text style={styles.category_text}>{'genres' in book.book ? book.book.genres : ''}</Text>
                                     </View>
                                     <View>
-                                        <TagStatus status={book.book.status} />
+                                        {book.book.status ? <TagStatus status={book.book.status} is_active={false} /> : null}
                                     </View>
                                 </View>
                             </View>
 
                         </View>
+                        {
+                            book.book.id ? (
+                                <View>
+                                    <Progress.Bar width={null} progress={book.book.current_page / book.book.page_count} color={theme.gradients.progressBar[0]} />
+                                </View>
+                            ) : null
+                        }
 
-                        <View>
-                            <Progress.Bar width={null} progress={progress(book.book.current_page, book.book.page_count)} color={theme.gradients.progressBar[0]} />
-                        </View>
                     </View>
                     <View >
                         <Text> {'>'} </Text>

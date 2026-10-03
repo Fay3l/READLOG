@@ -59,3 +59,37 @@ export const useBookStore = create<SingleBookStore>((set) => ({
     book: null,
     setBook: (ubooks:GetBook| null) => set({ book: ubooks })
 }))
+
+export function toGetBook(x: BookResult): GetBook {
+    return {
+        id: "",
+        google_books_id: x.google_books_id,
+        isbn: x.isbn ?? "",
+        title: x.title,
+        author: x.author,
+        cover_url: x.cover_url ?? "",
+        description: x.description ?? "",
+        publisher: x.publisher ?? "",
+        published_year: x.published_year ? Number(x.published_year) : 0,
+        status: "",
+        current_page: 0,
+        genres: x.genre ?? "",
+        page_count: x.page_count ?? 0,
+        created_at: "",
+    }
+}
+
+export function toBookResult(x: GetBook): BookResult {
+    return {
+        google_books_id: x.google_books_id,
+        title: x.title,
+        author: x.author,
+        cover_url: x.cover_url ?? null,
+        description: x.description ?? null,
+        page_count: x.page_count ?? null,
+        isbn: x.isbn ?? null,
+        published_year: x.published_year ? String(x.published_year) : null,
+        publisher: x.publisher ?? null,
+        genre: x.genres ?? null,
+    }
+}

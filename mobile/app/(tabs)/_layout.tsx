@@ -53,6 +53,11 @@ export default function TabsLayout() {
             href: null,
         }}>
         </Tabs.Screen>
+        <Tabs.Screen name="searchbooks"  options={{
+            headerShown:false,
+            href: null,
+        }}>
+        </Tabs.Screen>
     </Tabs>;
 }
 

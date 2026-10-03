@@ -14,7 +14,7 @@ export default function Camera() {
   const isScanning = useRef(false);
   const { show } = useToast()
   const index = () => {
-    router.replace('/(tabs)')
+    router.replace('/(tabs)/searchbooks')
   }
 
   if (!permission) {
