@@ -58,4 +58,16 @@ async def get_books(db: Session, current_user: GetUser) -> list[GetBook] | list:
 
 async def remove_book(db:Session, b_id:str):
     book_id = UUID(hex=b_id)
-    return (db.query(Books).filter(Books.id == book_id).delete(synchronize_session="evaluate"))
+    res = db.query(Books).filter(Books.id == book_id).delete(synchronize_session="evaluate")
+    if res == 0:
+        return False
+    db.commit()
+    return True
+async def remove_user_book(db:Session, b_id:str, u_id:str):
+    book_id = UUID(hex=b_id)
+    user_id = UUID(hex=u_id)
+    res =db.query(UserBooks).filter(UserBooks.book_id == book_id, UserBooks.user_id == user_id).delete(synchronize_session="evaluate")
+    if res == 0:
+        return False
+    db.commit()
+    return True

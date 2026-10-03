@@ -38,7 +38,6 @@ export default function Index() {
       setBooksStatus([]);
       return;
     }
-    console.log(userBooks)
     if (state === "") {
       setBooksStatus(userBooks);
       return;

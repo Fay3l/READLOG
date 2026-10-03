@@ -26,7 +26,7 @@ export async function get_books() {
 }
 
 // fetch/books.ts
-export async function add_book(book: BookResult) {
+export async function add_userbook(book: BookResult) {
   try {
     const res = await api.post(`/books/add?google_books_id=${book.google_books_id}`);
 
@@ -41,6 +41,26 @@ export async function add_book(book: BookResult) {
     return false;
   } catch (err: any) {
     console.log(err.response?.data?.detail);
+    return false;
+  }
+}
+
+export async function remove_userbook(book_id: string) {
+  try {
+    console.log("DELETE book_id:", book_id);  // ✅ vérifie que book_id n'est pas undefined
+    const res = await api.delete(`/users/book/${book_id}`);
+    console.log("STATUS:", res.status);
+    if (res.status === 200) {
+      const data = await get_books();
+      if (data) {
+        useUserBookStore.getState().setUserBooks(data);
+        return true;
+      }
+      return false;
+    }
+    return false;
+  } catch (err: any) {
+    console.log("ERREUR DELETE:", err.response?.status, err.response?.data?.detail);
     return false;
   }
 }

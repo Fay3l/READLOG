@@ -6,7 +6,7 @@ import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
 import { useBookResultStore } from "@/types/books";
 import { Screen } from "@/components/screen";
-import { add_book } from "@/fetch/books";
+import { add_userbook } from "@/fetch/books";
 import { useToast } from "@/components/toast/toast_context";
 
 export default function BookResult() {
@@ -17,7 +17,7 @@ export default function BookResult() {
     if (!book) { router.back(); return null; }
     const addBook = async() => {
         try{
-            await add_book(book)
+            await add_userbook(book)
             show("Livre ajouté","success")
             router.push('/(tabs)')
         }

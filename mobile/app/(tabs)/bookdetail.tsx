@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OpenBook from "@/assets/icon/open-book.svg"
-import { add_book } from "@/fetch/books";
+import { add_userbook, remove_userbook } from "@/fetch/books";
 import { useToast } from "@/components/toast/toast_context";
 
 export default function BookDetail() {
@@ -26,13 +26,26 @@ export default function BookDetail() {
     }
     const addBook= async()=>{
         const rbook = toBookResult(book)
-        const res = await add_book(rbook)
+        const res = await add_userbook(rbook)
         if(res){
             show('Livre ajouté','success')
             router.replace('/(tabs)')
         }
         else show('Livre pas ajouté','error')
         
+    }
+    const removeBook = async()=>{
+        if(!book.id){
+            console.log(book.id)
+            show('Veuillez réessayez','error')
+            return
+        }
+        const res = await remove_userbook(book.id)
+        if(res){
+            show('Livre supprimé','success')
+            router.replace('/(tabs)')
+        }
+        else show('Livre pas supprimé','error')
     }
     return (
         <Screen>
@@ -70,7 +83,7 @@ export default function BookDetail() {
                         {
                             book.id ?
                                 <View>
-                                    <TouchableOpacity>
+                                    <TouchableOpacity onPress={removeBook}>
                                         <Text style={{ color: theme.colors.status.abandoned }}>Supprimer de la bibliothèque</Text>
                                     </TouchableOpacity>
                                 </View>
