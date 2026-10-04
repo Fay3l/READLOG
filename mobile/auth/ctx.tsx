@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import * as SecureStore from 'expo-secure-store';
 import { useUserStore } from '@/types/users';
 import { getUser } from '@/fetch/users';
-import { get_books } from '@/fetch/books';
+import { get_userbooks } from '@/fetch/books';
 import { useUserBookStore } from '@/types/books';
 
 
@@ -97,7 +97,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
                             setSession('xx');
                             const user = await getUser()
                             setUser(user)
-                            const books = await get_books()
+                            const books = await get_userbooks()
                             setUserBooks(books)
                             router.replace('/(tabs)');
                         }

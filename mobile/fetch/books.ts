@@ -19,8 +19,8 @@ export async function search_books(
   }
 }
 
-export async function get_books() {
-  const response = await api.get<GetBook[]>('/books/')
+export async function get_userbooks() {
+  const response = await api.get<GetBook[]>('users/books/')
   if (!response.data) return []
   return response.data
 }
@@ -31,7 +31,7 @@ export async function add_userbook(book: BookResult) {
     const res = await api.post(`/books/add?google_books_id=${book.google_books_id}`);
 
     if (res.status === 200) {
-      const data = await get_books();
+      const data = await get_userbooks();
       if (data) {
         useUserBookStore.getState().setUserBooks(data); // ✅ .getState(), pas le hook
         return true;
@@ -51,7 +51,7 @@ export async function remove_userbook(book_id: string) {
     const res = await api.delete(`/users/book/${book_id}`);
     console.log("STATUS:", res.status);
     if (res.status === 200) {
-      const data = await get_books();
+      const data = await get_userbooks();
       if (data) {
         useUserBookStore.getState().setUserBooks(data);
         return true;

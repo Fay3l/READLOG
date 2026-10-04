@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from pwdlib import PasswordHash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
+from app.models.users import Users
 from ..schemas.user import GetUser, UserCreate
 from ..services.email import generate_code, send_verification_email
 from ..database.session import get_db
@@ -51,6 +52,30 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+# auth.py (ou là où se trouve ton get_current_user actuel)
+
+
+async def get_current_user_orm(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> Users:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials or expired token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except InvalidTokenError:
+        raise credentials_exception
+    user = db.query(Users).filter(Users.name == username).first()
+    if not user:
+        raise credentials_exception
+    return user
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

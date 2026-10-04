@@ -62,7 +62,7 @@ async def remove_book(db:Session, b_id:str):
     if res == 0:
         return False
     db.commit()
-    return True
+    return True 
 async def remove_user_book(db:Session, b_id:str, u_id:str):
     book_id = UUID(hex=b_id)
     user_id = UUID(hex=u_id)

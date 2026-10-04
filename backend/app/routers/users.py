@@ -8,7 +8,7 @@ from ..database.session import get_db
 from app.routers.auth import get_current_user, require_verified_email
 from app.schemas.user import GetUser, OnboardingSchema
 from sqlalchemy.orm import Session
-from app.repositories.books import  remove_user_book
+from app.repositories.books import  get_books, remove_user_book
 from uuid import uuid4
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -58,3 +58,9 @@ async def delete_book(
         raise HTTPException(status_code=404, detail="Livre non trouvé dans la bibliothèque de l'utilisateur")
     
     return {"detail": "Livre supprimé de la bibliothèque de l'utilisateur et éventuellement de la base de données."}
+
+
+@router.get("/books")
+async def getbooks(current_user: GetUser =Depends(get_current_user),db: Session=Depends(get_db)):
+    res = await get_books(db, current_user)
+    return res
