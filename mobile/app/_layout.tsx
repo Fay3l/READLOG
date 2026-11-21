@@ -7,6 +7,12 @@ import { ToastProvider } from '@/components/toast/toast_context';
 import { Toast } from '@/components/toast/toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEffect } from 'react';
+import * as SystemUI from 'expo-system-ui';
+import {
+  ThemeProvider as NavigationThemeProvider,
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationLightTheme,
+} from '@react-navigation/native';
 
 
 export const unstable_settings = {
@@ -19,17 +25,37 @@ export default function Root() {
     <SessionProvider>
       <SplashScreenController />
       <StatusBar hidden />
-      <ToastProvider>
-        <RootNavigator />
-        <Toast />
-      </ToastProvider>
+      {/* ✅ ThemeProvider doit ENGLOBER RootNavigator, sinon useThemeContext()
+          dans RootNavigator lit la valeur par défaut du contexte */}
+      <ThemeProvider>
+        <ToastProvider>
+          <RootNavigator />
+          <Toast />
+        </ToastProvider>
+      </ThemeProvider>
     </SessionProvider>
   );
 }
 
 function RootNavigator() {
   const { session,setSession } = useSession();
-  const { theme } = useThemeContext();
+  const { theme, isDark } = useThemeContext();
+
+  // ✅ Fond natif de la fenêtre : c'est lui qu'on voit (en noir) pendant les transitions
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(theme.colors.bg.primary);
+  }, [theme]);
+
+  // ✅ Thème de React Navigation : fond des conteneurs de navigation
+  const baseNavTheme = isDark ? NavigationDarkTheme : NavigationLightTheme;
+  const navigationTheme = {
+    ...baseNavTheme,
+    colors: {
+      ...baseNavTheme.colors,
+      background: theme.colors.bg.primary,
+      card: theme.colors.bg.nav,
+    },
+  };
   const { user, isLoading } = useCurrentUser();
   useEffect(() => {
     if (isLoading || !session || !user) return;
@@ -50,7 +76,7 @@ function RootNavigator() {
   }, [user, isLoading, session]);
 
   return (
-    <ThemeProvider>
+    <NavigationThemeProvider value={navigationTheme}>
       <Stack screenOptions={{
         headerStyle: { backgroundColor: theme.colors.bg.nav },
         headerTintColor: theme.colors.text.primary,
@@ -109,7 +135,7 @@ function RootNavigator() {
         
 
       </Stack>
-    </ThemeProvider>
+    </NavigationThemeProvider>
 
   );
 }
