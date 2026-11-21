@@ -47,7 +47,6 @@ async def get_books(db: Session, current_user: GetUser) -> list[GetBook] | list:
     )
     if not res:
         return []
-    print(res)
     books = []
     for book, status,current_page in res:
         data = {**book.__dict__, "status": status, "current_page": current_page}

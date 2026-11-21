@@ -27,11 +27,11 @@ export default function BookDetail() {
     const addBook= async()=>{
         const rbook = toBookResult(book)
         const res = await add_userbook(rbook)
-        if(res){
+        if(res.ok){
             show('Livre ajouté','success')
             router.replace('/(tabs)')
         }
-        else show('Livre pas ajouté','error')
+        else show(res.message ?? 'Livre pas ajouté','error')
         
     }
     const removeBook = async()=>{

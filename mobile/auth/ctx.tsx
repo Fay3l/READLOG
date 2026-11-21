@@ -42,12 +42,6 @@ export function useSession() {
 
 let globalSignOut: (() => void) | null = null;
 
-export async function SignOut() {
-    const [, setSession] = useStorageState('session');
-    await SecureStore.deleteItemAsync("token");
-    setSession(null);
-}
-
 
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
@@ -77,6 +71,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
                 signOut: () => {
                     setToken(null);
                     setSession(null);
+                    setUser(null);
+                    setUserBooks(null);
                     router.replace('/login');
                 },
                 logIn: async (pw, email) => {

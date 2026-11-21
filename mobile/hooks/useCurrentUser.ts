@@ -1,5 +1,7 @@
 import { useSession } from '@/auth/ctx';
 import { getUser } from '@/fetch/users';
+import { get_userbooks } from '@/fetch/books';
+import { useUserBookStore } from '@/types/books';
 import { useUserStore } from '@/types/users';
 import { useEffect } from 'react';
 
@@ -8,6 +10,7 @@ export function useCurrentUser() {
   const { session, signOut } = useSession();
 
   const { user, setUser, isLoading, setLoading } = useUserStore();
+  const setUserBooks = useUserBookStore((s) => s.setUserBooks);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,9 +23,15 @@ export function useCurrentUser() {
 
       if (data) {
         setUser(data);
+        // ✅ au redémarrage de l'app, logIn() n'est pas rappelé :
+        // il faut donc charger la bibliothèque ici aussi
+        const books = await get_userbooks();
+        if (cancelled) return;
+        setUserBooks(books);
       } else if (session) {
         // ✅ ne déclenche signOut que si on pensait être connecté
         setUser(null);
+        setUserBooks(null);
         signOut();
       }
 
@@ -33,6 +42,7 @@ export function useCurrentUser() {
       void fetchUser();
     } else {
       setUser(null);
+      setUserBooks(null);
       setLoading(false);
     }
 

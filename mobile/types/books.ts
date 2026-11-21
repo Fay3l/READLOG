@@ -19,7 +19,7 @@ export type GetBook = {
     isbn?: string | null;
     title: string;
     author: string;
-    cover_url: string;
+    cover_url: string | null;
     description: string | null;
     publisher: string | null;
     published_year: string | null;

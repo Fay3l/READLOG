@@ -57,7 +57,7 @@ export function CardBook(book: CardBookProps) {
                         {
                             book.book.id ? (
                                 <View>
-                                    <Progress.Bar width={null} progress={book.book.current_page / book.book.page_count} color={theme.gradients.progressBar[0]} />
+                                    <Progress.Bar width={null} progress={book.book.page_count ? book.book.current_page / book.book.page_count : 0} color={theme.gradients.progressBar[0]} />
                                 </View>
                             ) : null
                         }

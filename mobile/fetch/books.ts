@@ -19,10 +19,15 @@ export async function search_books(
   }
 }
 
-export async function get_userbooks() {
-  const response = await api.get<GetBook[]>('users/books/')
-  if (!response.data) return []
-  return response.data
+export async function get_userbooks(): Promise<GetBook[]> {
+  try {
+    // ⚠️ pas de "/" final : "users/books/" provoquait une redirection 307
+    const response = await api.get<GetBook[]>('/users/books')
+    return Array.isArray(response.data) ? response.data : []
+  } catch (err: any) {
+    console.log('ERREUR GET USERBOOKS :', err.response?.status, err.response?.data?.detail)
+    return []
+  }
 }
 
 // fetch/books.ts

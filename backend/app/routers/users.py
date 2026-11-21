@@ -30,6 +30,13 @@ async def read_user_me(current_user: Annotated[GetUser, Depends(get_current_user
     return current_user
 
 
+# ⚠️ Doit être déclarée AVANT "/{username}", sinon "/books" est capturé
+# par la route dynamique et renvoie {"username": "books"}.
+@router.get("/books")
+async def getbooks(current_user: GetUser = Depends(get_current_user), db: Session = Depends(get_db)):
+    return await get_books(db, current_user)
+
+
 @router.get("/{username}")
 async def read_user(username: str):
     return {"username": username}
@@ -58,9 +65,3 @@ async def delete_book(
         raise HTTPException(status_code=404, detail="Livre non trouvé dans la bibliothèque de l'utilisateur")
     
     return {"detail": "Livre supprimé de la bibliothèque de l'utilisateur et éventuellement de la base de données."}
-
-
-@router.get("/books")
-async def getbooks(current_user: GetUser =Depends(get_current_user),db: Session=Depends(get_db)):
-    res = await get_books(db, current_user)
-    return res

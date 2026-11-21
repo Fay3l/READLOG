@@ -69,3 +69,23 @@ async def test_delete_book_no_exists_by_user(db, make_user, make_book, make_user
     alice_book = await remove_book(b_id=b1_id, db=db)
 
     assert alice_book == 0
+
+@pytest.mark.asyncio
+async def test_get_books_with_null_metadata(db, make_user, make_book, make_user_book):
+    # Un livre Google Books sans couverture (cover_url = None) ne doit pas
+    # faire planter la récupération de la bibliothèque.
+    user = make_user(name="Carol")
+    book = make_book(title="Sans couverture", cover_url=None, published_year=None)
+    make_user_book(user, book)
+
+    result = await get_books(db, user)
+
+    assert len(result) == 1
+    assert result[0].cover_url is None
+
+
+def test_users_books_route_not_shadowed_by_username_route():
+    # /api/users/books doit atteindre la route des livres et non /{username}
+    from app.routers.users import router
+    paths = [r.path for r in router.routes]
+    assert paths.index("/api/users/books") < paths.index("/api/users/{username}")
