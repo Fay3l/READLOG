@@ -22,8 +22,8 @@ class BookResult(BaseModel):
 class GetUserBook(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
-    started_at: datetime
-    finished_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
     status: str
     cover_url: str
     personal_note: str
@@ -42,7 +42,7 @@ class GetBook(BaseModel):
     isbn: str | None
     title: str
     author: str
-    cover_url: str
+    cover_url: str | None
     status: str | None
     current_page: int | None
     description: str | None

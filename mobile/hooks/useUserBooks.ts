@@ -1,13 +1,17 @@
 import { get_userbooks } from "@/fetch/books";
 import { useUserBookStore } from "@/types/books";
-import { useEffect } from "react";
+import { useCallback } from "react";
 
-export async function useUserBook() {
+// Hook synchrone (un hook React ne peut pas être `async`).
+// Les livres sont chargés au démarrage par useCurrentUser ;
+// `refresh` permet de les recharger à la demande (pull-to-refresh, stats...).
+export function useUserBooks() {
     const { userBooks, setUserBooks } = useUserBookStore();
-    if (userBooks) return;
-    console.log("--- GETBOOKS ---")
-    const data = await get_userbooks();
-    console.log("--- GETBOOKS1 ---")
-    setUserBooks(data);
-    return { userBooks, setUserBooks };
+
+    const refresh = useCallback(async () => {
+        const data = await get_userbooks();
+        setUserBooks(data);
+    }, [setUserBooks]);
+
+    return { userBooks: userBooks ?? [], isLoaded: userBooks !== null, refresh };
 }

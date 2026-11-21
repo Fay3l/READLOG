@@ -67,7 +67,7 @@ def make_user(db):
 @pytest.fixture
 def make_book(db):
     def _make_book(title="Dune", author="Frank Herbert", **kwargs):
-        book = Books(
+        fields = dict(
             id=uuid4(),
             title=title,
             author=author,
@@ -76,9 +76,10 @@ def make_book(db):
             cover_url="",
             description="",
             publisher="",
-            published_year=0,
-            ** kwargs,
+            published_year="2000",
         )
+        fields.update(kwargs)  # permet de surcharger n'importe quel champ
+        book = Books(**fields)
         db.add(book)
         db.commit()
         db.refresh(book)
