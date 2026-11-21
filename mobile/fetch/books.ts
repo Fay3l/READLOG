@@ -28,20 +28,15 @@ export async function get_userbooks() {
 // fetch/books.ts
 export async function add_userbook(book: BookResult) {
   try {
-    const res = await api.post(`/books/add?google_books_id=${book.google_books_id}`);
-
+    const res = await api.post(`/books/add?google_books_id=${book.google_books_id}`)
     if (res.status === 200) {
       const data = await get_userbooks();
-      if (data) {
-        useUserBookStore.getState().setUserBooks(data); // ✅ .getState(), pas le hook
-        return true;
-      }
-      return false;
+      useUserBookStore.getState().setUserBooks(data);
+      return { ok: true };
     }
-    return false;
+    return { ok: false, message: 'Erreur inconnue' }
   } catch (err: any) {
-    console.log(err.response?.data?.detail);
-    return false;
+    return { ok: false, message: err.response?.data?.detail ?? 'Erreur réseau' }
   }
 }
 

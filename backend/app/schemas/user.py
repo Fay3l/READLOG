@@ -30,3 +30,14 @@ class OnboardingSchema(BaseModel):
     preferred_genres: list[str]
     reminder_time:    str | None = None   # ex: "21:00"
     reminder_days:    list[str] | None = None  # ex: ["mon","wed","fri"]
+
+
+class UserStats(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    total_books: int
+    reading_books: int
+    finished_books: int
+    to_read_books: int
+    page_reads: int
+    reading_goals: int
+    reading_weeks: int

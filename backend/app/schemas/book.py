@@ -39,15 +39,15 @@ class GetBook(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     google_books_id: str
-    isbn: str
+    isbn: str | None
     title: str
     author: str
     cover_url: str
     status: str | None
     current_page: int | None
-    description: str
-    publisher: str
-    published_year: int
-    genres: str
-    page_count: int
+    description: str | None
+    publisher: str | None
+    published_year: str | None
+    genres: str | None
+    page_count: int | None
     created_at: datetime

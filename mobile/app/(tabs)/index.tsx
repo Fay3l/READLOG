@@ -98,17 +98,13 @@ export default function Index() {
             </TouchableOpacity>
           </View>
         </View>
-        {booksStatus ? booksStatus.map((userbook) => {
-          return (
+        {Array.isArray(booksStatus) && booksStatus.length > 0 ? (
+          booksStatus.map((userbook) => (
             <CardBook key={userbook.id} book={userbook} page="/(tabs)" />
-          )
-        }) : (
-          <View>
-            <Text></Text>
-          </View>
-        )
-
-        }
+          ))
+        ) : (
+          <Text style={{color: theme.colors.text.secondary,fontWeight: "bold", margin:10}}>Aucun livre pour le moment</Text>
+        )}
 
 
       </SafeAreaView>

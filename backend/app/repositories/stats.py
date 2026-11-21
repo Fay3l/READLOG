@@ -2,6 +2,7 @@ from requests import Session
 from app.models.books import Books
 from app.models.user_books import UserBooks
 from app.models.users import Users
+from app.schemas.user import UserStats
 
 
 async def get_user_stats(user: Users, db: Session):
@@ -29,12 +30,12 @@ async def get_user_stats(user: Users, db: Session):
     reading_weeks = db.query(UserBooks).filter(
         UserBooks.user_id == user.id, UserBooks.status == "reading").with_entities(UserBooks.start_date, UserBooks.end_date).all()
 
-    return {
-        "total_books": total_books,
-        "reading_books": reading_books,
-        "finished_books": finished_books,
-        "to_read_books": to_read_books,
-        "page_reads": page_reads,
-        "reading_goals": reading_goals,
-        "reading_weeks": reading_weeks
-    }
+    return UserStats(
+        total_books=total_books,
+        reading_books=reading_books,
+        finished_books=finished_books,
+        to_read_books=to_read_books,
+        page_reads=page_reads,
+        reading_goals=reading_goals,
+        reading_weeks=len([1 for start, end in reading_weeks if start is not None and end is not None])
+    )

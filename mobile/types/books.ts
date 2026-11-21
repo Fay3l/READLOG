@@ -16,17 +16,17 @@ export type BookResult = {
 export type GetBook = {
     id: string;
     google_books_id: string;
-    isbn: string;
+    isbn?: string | null;
     title: string;
     author: string;
     cover_url: string;
-    description: string;
-    publisher: string;
-    published_year: number;
+    description: string | null;
+    publisher: string | null;
+    published_year: string | null;
     status:string;
     current_page:number;
-    genres: string;
-    page_count: number;
+    genres: string | null;
+    page_count: number | null;
     created_at: string;
 }
 
@@ -70,7 +70,7 @@ export function toGetBook(x: BookResult): GetBook {
         cover_url: x.cover_url ?? "",
         description: x.description ?? "",
         publisher: x.publisher ?? "",
-        published_year: x.published_year ? Number(x.published_year) : 0,
+        published_year: x.published_year ? x.published_year : "",
         status: "",
         current_page: 0,
         genres: x.genre ?? "",

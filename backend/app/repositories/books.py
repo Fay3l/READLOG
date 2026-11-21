@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 from uuid import uuid4,UUID
 from sqlalchemy.orm import Session
 from app.models.books import Books
