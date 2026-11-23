@@ -8,3 +8,8 @@ def utcnow() -> datetime:
     toutes les lignes recevaient alors la même date, celle du démarrage du serveur.
     """
     return datetime.now(UTC)
+
+
+def normalize_database_url(url: str) -> str:
+    # Render, Heroku, Neon... fournissent souvent "postgres://", que SQLAlchemy 2 refuse
+    return "postgresql://" + url[len("postgres://") :] if url.startswith("postgres://") else url

@@ -112,3 +112,14 @@ def test_malformed_book_id_returns_422(client, caplog):
     token = client.post("/api/verify-email", params={"email": email, "code": code}).json()["access_token"]
     res = client.delete("/api/users/book/pas-un-uuid", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 422  # avant : UUID(hex=...) levait une erreur 500
+
+
+def test_postgres_url_is_normalized():
+    from app.database.utils import normalize_database_url
+
+    assert normalize_database_url("postgres://u:p@h/db") == "postgresql://u:p@h/db"
+    assert normalize_database_url("postgresql://u:p@h/db") == "postgresql://u:p@h/db"
+
+
+def test_health(client):
+    assert client.get("/health").json() == {"status": "ok"}

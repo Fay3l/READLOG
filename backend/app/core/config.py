@@ -8,6 +8,8 @@ import os
 
 from dotenv import load_dotenv
 
+from app.database.utils import normalize_database_url
+
 load_dotenv()
 
 
@@ -23,7 +25,7 @@ def _list(name: str) -> list[str]:
 
 
 # ── Base de données ──────────────────────────────────────────────
-DATABASE_URL: str = _required("DATABASE_URL")
+DATABASE_URL: str = normalize_database_url(_required("DATABASE_URL"))
 SQL_ECHO: bool = os.getenv("SQL_ECHO", "false").lower() == "true"  # affiche le SQL (debug uniquement)
 
 # ── JWT ──────────────────────────────────────────────────────────

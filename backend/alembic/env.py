@@ -14,6 +14,7 @@ from app.models.quotes import Quotes
 from app.models.reading_notes import ReadingNotes
 
 from alembic import context
+from app.database.utils import normalize_database_url
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ load_dotenv()
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+config.set_main_option("sqlalchemy.url", normalize_database_url(os.environ["DATABASE_URL"]))
 
 
 # Interpret the config file for Python logging.
