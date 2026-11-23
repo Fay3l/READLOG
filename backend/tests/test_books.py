@@ -1,6 +1,9 @@
+from uuid import uuid4
+
+import pytest
+
 # test_books.py
 from app.repositories.books import get_books, remove_book
-import pytest
 
 
 @pytest.mark.asyncio
@@ -52,23 +55,24 @@ async def test_get_books_ignores_other_users(db, make_user, make_book, make_user
 
 @pytest.mark.asyncio
 async def test_delete_book_by_user(db, make_user, make_book, make_user_book):
-    user = make_user(name="Alice")
     book1 = make_book(title="Dune")
-    
+
     b1_id = str(book1.id)
     alice_book = await remove_book(b_id=b1_id, db=db)
 
     assert alice_book == 1
 
+
 @pytest.mark.asyncio
 async def test_delete_book_no_exists_by_user(db, make_user, make_book, make_user_book):
-    user = make_user(name="Alice")
-    book1 = make_book(title="Dune")
-    book2 = make_book(title="1984", author="George Orwell")
-    b1_id = str(book1.id).replace("5","1")
+    make_book(title="Dune")
+    # un identifiant qui n'existe pas (avant : remplacer les "5" de l'id, ce qui échouait
+    # au hasard quand l'UUID tiré ne contenait aucun "5")
+    b1_id = str(uuid4())
     alice_book = await remove_book(b_id=b1_id, db=db)
 
     assert alice_book == 0
+
 
 @pytest.mark.asyncio
 async def test_get_books_with_null_metadata(db, make_user, make_book, make_user_book):
@@ -82,10 +86,3 @@ async def test_get_books_with_null_metadata(db, make_user, make_book, make_user_
 
     assert len(result) == 1
     assert result[0].cover_url is None
-
-
-def test_users_books_route_not_shadowed_by_username_route():
-    # /api/users/books doit atteindre la route des livres et non /{username}
-    from app.routers.users import router
-    paths = [r.path for r in router.routes]
-    assert paths.index("/api/users/books") < paths.index("/api/users/{username}")

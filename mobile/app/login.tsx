@@ -74,7 +74,7 @@ export default function LogIn() {
                 </View>
                 <View style={{position:'absolute', bottom:'7%',left:'20%',right:'20%'}}>
                     <View style={{ alignItems: 'center' }}>
-                        <Text style={{ color: theme.colors.text.secondary, fontSize: theme.fontSizes.md }}>Pas de compte ? <Text onPress={signUp} style={{ color: theme.gradients.premium[0] }}>S'inscrire</Text></Text>
+                        <Text style={{ color: theme.colors.text.secondary, fontSize: theme.fontSizes.md }}>Pas de compte ? <Text onPress={signUp} style={{ color: theme.gradients.premium[0] }}>S’inscrire</Text></Text>
                     </View>
                 </View>
             </SafeAreaView>

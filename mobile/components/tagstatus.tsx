@@ -11,21 +11,21 @@ interface TagStatusProps {
 export function TagStatus({ status, is_active }: TagStatusProps) {
     const theme = useTheme()
     const styles = useStyles()
-    if (status == "to_read") {
+    if (status === "to_read") {
         return (
             <View style={[styles.tag, { backgroundColor: theme.colors.status.toReadBg, }]}>
                 <Text style={[styles.text, { color: theme.colors.status.toRead }]}>À lire</Text>
             </View>
         )
     }
-    if (status == "finished") {
+    if (status === "finished") {
         return (
             <View style={[styles.tag, { backgroundColor: theme.colors.status.finishedBg, }]}>
                 <Text style={[styles.text, { color: theme.colors.status.finished }]}>Terminé</Text>
             </View>
         )
     }
-    if (status == "reading") {
+    if (status === "reading") {
         return (
             <View style={[styles.tag, { backgroundColor: theme.colors.status.readingBg, }]}>
                 <Text style={[styles.text, { color: theme.colors.status.reading }]}>En cours</Text>

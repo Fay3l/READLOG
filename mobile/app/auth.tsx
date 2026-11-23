@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -16,7 +16,9 @@ export default function Auth() {
     const styles = useStyles(theme)
 
     // Apparition douce : l'étagère, puis le texte, puis les boutons
-    const fade = useRef([0, 1, 2].map(() => new Animated.Value(0))).current
+    // useState avec une fonction : les valeurs animées sont créées une seule fois.
+    // (lire ref.current pendant le rendu est interdit par les règles de React)
+    const [fade] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)))
     useEffect(() => {
         Animated.stagger(140, fade.map(v =>
             Animated.timing(v, { toValue: 1, duration: 500, useNativeDriver: true })
@@ -64,7 +66,7 @@ export default function Auth() {
                         onPress={() => router.push('/login')}
                         style={({ pressed }) => [styles.button_secondary, pressed && styles.pressed]}
                     >
-                        <Text style={styles.button_secondary_text}>J'ai déjà un compte</Text>
+                        <Text style={styles.button_secondary_text}>J’ai déjà un compte</Text>
                     </Pressable>
                 </Animated.View>
             </SafeAreaView>

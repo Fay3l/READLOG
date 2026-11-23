@@ -18,7 +18,8 @@ build/
 # ── Variables d'environnement & secrets ──────────────────
 .env
 .env.*
-!.env.example        # garder l'exemple sans les vraies valeurs
+# garder l'exemple sans les vraies valeurs (pas de commentaire en fin de ligne dans un .gitignore)
+!.env.example
 
 # ── IDEs & éditeurs ───────────────────────────────────────
 .vscode/

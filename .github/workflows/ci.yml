@@ -1,0 +1,53 @@
+# Intégration continue : à chaque push et pull request, GitHub vérifie que le code
+# est propre (linters) et que rien n'est cassé (tests, types). Un ❌ sur la PR = on ne fusionne pas.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (ruff + pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # valeurs factices pour les tests : la vraie config n'est jamais dans le dépôt
+      DATABASE_URL: "sqlite://"
+      SECRET_KEY: "ci-secret-key-not-used-in-production-0123456789"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+      - name: Installer les dépendances
+        run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check app tests
+      - name: Format (ruff)
+        run: uv run ruff format --check app tests
+      - name: Tests
+        run: uv run pytest -q
+
+  mobile:
+    name: Mobile (TypeScript + ESLint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Installer les dépendances
+        run: npm ci
+      - name: Types (tsc)
+        run: npx tsc --noEmit
+      - name: Lint (eslint)
+        run: npx eslint . --max-warnings 0

@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Camera from "@/assets/icon/camera.svg"
 import Search from "@/assets/icon/search.svg"
 import { search_books } from "@/fetch/books";
-import { BookResult, GetBook, toGetBook } from "@/types/books";
+import { BookResult, toGetBook } from "@/types/books";
 import { router } from "expo-router";
 import { CardBook } from "@/components/cardbook";
 

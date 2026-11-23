@@ -1,4 +1,4 @@
-import { Platform, useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 
 // ─── Palette Dark — Warm Dark (thème original) ───────────────────────────────
 

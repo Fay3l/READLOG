@@ -1,77 +1,62 @@
 import api from "@/lib/api";
+import { apiErrorMessage } from "@/lib/errors";
 import { BookResult, GetBook, useUserBookStore } from "@/types/books";
 
-export async function search_books(
-  search: string,
-): Promise<BookResult[] | null> {
+// Résultat commun des actions : { ok: true } ou { ok: false, message } prêt à afficher dans un toast
+type ActionResult = { ok: true } | { ok: false; message: string };
+
+// Recharge la bibliothèque dans le store après une modification
+async function refreshLibrary(): Promise<GetBook[]> {
+  const books = await get_userbooks();
+  useUserBookStore.getState().setUserBooks(books);
+  return books;
+}
+
+export async function search_books(search: string): Promise<BookResult[]> {
   try {
-    const response = await api.get<BookResult[]>(
-      "/books/search",
-      {
-        params: {
-          q: search,
-        },
-      }
-    );
+    const response = await api.get<BookResult[]>("/books/search", { params: { q: search } });
     return response.data;
   } catch {
-    return []
+    return []; // 404 = aucun résultat
   }
 }
 
 export async function get_userbooks(): Promise<GetBook[]> {
   try {
     // ⚠️ pas de "/" final : "users/books/" provoquait une redirection 307
-    const response = await api.get<GetBook[]>('/users/books')
-    return Array.isArray(response.data) ? response.data : []
-  } catch (err: any) {
-    console.log('ERREUR GET USERBOOKS :', err.response?.status, err.response?.data?.detail)
-    return []
+    const response = await api.get<GetBook[]>('/users/books');
+    return Array.isArray(response.data) ? response.data : [];
+  } catch {
+    return [];
   }
 }
 
-// fetch/books.ts
-export async function add_userbook(book: BookResult) {
+export async function add_userbook(book: BookResult): Promise<ActionResult> {
   try {
-    const res = await api.post(`/books/add?google_books_id=${book.google_books_id}`)
-    if (res.status === 200) {
-      const data = await get_userbooks();
-      useUserBookStore.getState().setUserBooks(data);
-      return { ok: true };
-    }
-    return { ok: false, message: 'Erreur inconnue' }
-  } catch (err: any) {
-    return { ok: false, message: err.response?.data?.detail ?? 'Erreur réseau' }
+    await api.post('/books/add', null, { params: { google_books_id: book.google_books_id } });
+    await refreshLibrary();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: apiErrorMessage(err, 'Livre pas ajouté') };
   }
 }
 
-export async function remove_userbook(book_id: string) {
+export async function remove_userbook(book_id: string): Promise<ActionResult> {
   try {
-    console.log("DELETE book_id:", book_id);  // ✅ vérifie que book_id n'est pas undefined
-    const res = await api.delete(`/users/book/${book_id}`);
-    console.log("STATUS:", res.status);
-    if (res.status === 200) {
-      const data = await get_userbooks();
-      if (data) {
-        useUserBookStore.getState().setUserBooks(data);
-        return true;
-      }
-      return false;
-    }
-    return false;
-  } catch (err: any) {
-    console.log("ERREUR DELETE:", err.response?.status, err.response?.data?.detail);
-    return false;
+    await api.delete(`/users/book/${book_id}`);
+    await refreshLibrary();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: apiErrorMessage(err, 'Livre pas supprimé') };
   }
 }
 
 export async function update_userbook(book_id: string, data: { status?: string; current_page?: number }) {
   try {
-    await api.patch(`/users/book/${book_id}`, data)
-    const books = await get_userbooks();
-    useUserBookStore.getState().setUserBooks(books);
-    return { ok: true, book: books.find(b => b.id === book_id) ?? null }
-  } catch (err: any) {
-    return { ok: false, book: null, message: err.response?.data?.detail ?? 'Erreur réseau' }
+    await api.patch(`/users/book/${book_id}`, data);
+    const books = await refreshLibrary();
+    return { ok: true as const, book: books.find(b => b.id === book_id) ?? null };
+  } catch (err) {
+    return { ok: false as const, book: null, message: apiErrorMessage(err, 'Mise à jour impossible') };
   }
 }

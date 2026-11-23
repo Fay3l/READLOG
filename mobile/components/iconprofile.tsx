@@ -10,7 +10,6 @@ export interface IconProfileProps {
     shadow: boolean
 }
 export function IconProfile({ width, height, fontSize, name, shadow }: IconProfileProps) {
-    const Theme = useTheme()
     const styles = useStyles(width, height)
     const letter = (name: string) => {
         const letter = name.charAt(0).toUpperCase()
@@ -38,5 +37,5 @@ function useStyles(width:number, height:number) {
             justifyContent: "center",
             alignItems: "center",
         },
-    }), [theme])
+    }), [theme, width, height])
 }

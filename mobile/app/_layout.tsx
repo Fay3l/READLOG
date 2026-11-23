@@ -1,4 +1,3 @@
-import { router, Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
 import { ThemeProvider, useThemeContext } from '@/constants/themecontext';
@@ -12,6 +11,8 @@ import * as SystemUI from 'expo-system-ui';
 // ⚠️ SDK 58 : expo-router embarque sa propre copie de React Navigation,
 // il faut importer depuis 'expo-router' et non '@react-navigation/native'
 import {
+  router,
+  Stack,
   ThemeProvider as NavigationThemeProvider,
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationLightTheme,
@@ -78,7 +79,7 @@ function RootNavigator() {
       router.replace('/goals');
     }
     // Sinon : l'utilisateur reste où il est (typiquement (tabs))
-  }, [user, isLoading, session]);
+  }, [user, isLoading, session, setSession]);
 
   return (
     <NavigationThemeProvider value={navigationTheme}>

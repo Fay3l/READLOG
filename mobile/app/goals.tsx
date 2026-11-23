@@ -10,11 +10,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import api from "@/lib/api";
 import { router } from "expo-router";
 import { useToast } from "@/components/toast/toast_context";
+import { apiErrorMessage } from "@/lib/errors";
+import { getUser } from "@/fetch/users";
+import { useUserStore } from "@/types/users";
 
 
 export default function Goals() {
     const theme = useTheme()
     const {show} = useToast()
+    const setUser = useUserStore(s => s.setUser)
     const [readingGoal, setReadingGoal] = useState(4)
     let genres = {
         "roman": false,
@@ -48,10 +52,12 @@ export default function Goals() {
         }
         try {
             await api.patch('/users/onboarding', onboarding);
-            router.replace('/(tabs)');            
-        } catch (err: any) {
-            show('Erreur onboarding :', err.response?.data?.detail)
-            console.error('Erreur onboarding :', err.response?.data?.detail);
+            // ✅ on recharge l'utilisateur : son onboarding_completed est maintenant à true
+            setUser(await getUser());
+            router.replace('/(tabs)');
+        } catch (err) {
+            // ✅ avant : show(message, detail) passait le détail à la place du type de toast
+            show(apiErrorMessage(err, "Impossible d'enregistrer tes objectifs"), 'error')
         }
     }
     return (

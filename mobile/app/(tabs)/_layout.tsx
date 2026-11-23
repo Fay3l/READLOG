@@ -13,10 +13,6 @@ export default function TabsLayout() {
     const styles = useLayoutStyles()
     const theme = useTheme()
 
-    const EmojiText = ({ name }: { name: string }) => {
-        return <Text style={styles.tabBarIcon}>{name}</Text>
-    }
-
     const TabBarLabel = ({ name, focused }: { name: string; focused: boolean }) => {
         return <Text style={focused ? styles.tabBarLabelActive : styles.tabBarLabel}>{name}</Text>
     }

@@ -57,7 +57,7 @@ export default function BookResult() {
                         genre={book.genre}
                     />
 
-                    <Text style={styles.question}>C'est bien ce livre ?</Text>
+                    <Text style={styles.question}>C’est bien ce livre ?</Text>
 
                     <BookDescription text={book.description} />
                 </ScrollView>
@@ -68,7 +68,7 @@ export default function BookResult() {
                         style={({ pressed }) => [styles.primary, pressed && styles.pressed]}>
                         {busy
                             ? <ActivityIndicator color={theme.colors.text.onAccent} />
-                            : <Text style={styles.primary_text}>Oui, l'ajouter à ma bibliothèque</Text>}
+                            : <Text style={styles.primary_text}>Oui, l’ajouter à ma bibliothèque</Text>}
                     </Pressable>
                     <Pressable onPress={() => router.replace('/camera')} disabled={busy} accessibilityRole="button"
                         style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>

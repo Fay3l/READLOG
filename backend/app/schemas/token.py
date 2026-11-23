@@ -1,15 +1,10 @@
-from pydantic import BaseModel, ConfigDict # type: ignore
+from pydantic import BaseModel
+
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 
-class TokenData(BaseModel):
-    username: str | None = None
-
-class GetVerifyUser(BaseModel):
-    model_config =  ConfigDict(from_attributes=True)
-    name:str
-    password_hashed:str
-    email_verified:bool
+class Message(BaseModel):
+    detail: str

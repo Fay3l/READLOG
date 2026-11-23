@@ -15,19 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/constants/themecontext';
 import { useToast } from '@/components/toast/toast_context';
 import { Screen } from '@/components/screen';
-import api from '@/lib/api';
 import { StepDots } from '@/components/stepdots';
 import { useSession } from '@/auth/ctx';
-import { useStorageState } from '@/auth/useStorageState';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30; // secondes
 
 export default function VerifyEmail() {
-  const theme = useTheme();          // hooks tous en haut
   const styles = useStyles();
-  const {verifyemail,setSession} = useSession()
-  const [[, token], setToken] = useStorageState('token');
+  const { verifyEmail, resendCode } = useSession()
   const { show } = useToast();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
@@ -35,10 +31,7 @@ export default function VerifyEmail() {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const inputRefs = useRef<Array<TextInputInstance | null>>([]);
-
-  const code = digits.join('');
-  const isComplete = code.length === CODE_LENGTH;
+  const inputRefs = useRef<(TextInputInstance | null)[]>([]);
 
   // ── Décompte du cooldown de renvoi ──────────────────────────────────────
   useEffect(() => {
@@ -47,32 +40,29 @@ export default function VerifyEmail() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  // ── Vérifie automatiquement dès que les 6 chiffres sont saisis ─────────
-  useEffect(() => {
-    if (isComplete) handleVerify();
-  }, [code]);
-
   // ── Handlers de saisie ───────────────────────────────────────────────────
   function handleChangeDigit(text: string, index: number) {
     const clean = text.replace(/[^0-9]/g, '');
     if (!clean) return;
 
-    // Gère le collage d'un code complet
-    if (clean.length > 1) {
-      const pasted = clean.slice(0, CODE_LENGTH).split('');
-      setDigits((prev) => prev.map((d, i) => pasted[i] ?? d));
-      inputRefs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
-      return;
-    }
-
     setError('');
-    setDigits((prev) => {
-      const next = [...prev];
+    let next: string[];
+    if (clean.length > 1) {
+      // Collage d'un code complet
+      const pasted = clean.slice(0, CODE_LENGTH).split('');
+      next = digits.map((d, i) => pasted[i] ?? d);
+      inputRefs.current[Math.min(pasted.length, CODE_LENGTH - 1)]?.focus();
+    } else {
+      next = [...digits];
       next[index] = clean;
-      return next;
-    });
+      if (index < CODE_LENGTH - 1) inputRefs.current[index + 1]?.focus();
+    }
+    setDigits(next);
 
-    if (index < CODE_LENGTH - 1) inputRefs.current[index + 1]?.focus();
+    // ✅ Vérification lancée ICI, dans le gestionnaire d'événement, dès le 6e chiffre
+    // (avant : un useEffect qui appelait handleVerify avant sa déclaration)
+    const code = next.join('');
+    if (code.length === CODE_LENGTH) void handleVerify(code);
   }
 
   function handleKeyPress(e: NativeSyntheticEvent<{ key: string }>, index: number) {
@@ -87,31 +77,29 @@ export default function VerifyEmail() {
   }
 
   // ── Appels API ────────────────────────────────────────────────────────────
-  async function handleVerify() {
+  async function handleVerify(code: string) {
     setLoading(true);
     setError('');
-    try {
-      verifyemail(code, email)
+    // ✅ on attend la réponse : avant, "Email vérifié" s'affichait même avec un mauvais code
+    const res = await verifyEmail(code, email);
+    setLoading(false);
+    if (res.ok) {
       show('Email vérifié 🎉', 'success');
-    } catch (err: any) {
-      console.log(err)
-      setError('Code incorrect');
+    } else {
+      setError(res.message);
       setDigits(new Array(CODE_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
-    } finally {
-      setLoading(false);
     }
   }
 
   async function handleResend() {
     if (cooldown > 0) return;
-    try {
-      const res = await api.post(`/api/resend-code/?email=${email}`);
-      console.log(res.data?.detail)
-      show('res.data as string', 'info');
+    const res = await resendCode(email);
+    if (res.ok) {
+      show('Nouveau code envoyé, regarde tes e-mails', 'info');
       setCooldown(RESEND_COOLDOWN);
-    } catch {
-      show("Impossible d'envoyer le code, réessaie", 'error');
+    } else {
+      show(res.message, 'error');
     }
   }
 

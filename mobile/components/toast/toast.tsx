@@ -39,7 +39,7 @@ export function Toast() {
       translateY.value = withTiming(-100, { duration: 200 });
       opacity.value     = withTiming(0, { duration: 200 });
     }
-  }, [toast]);
+  }, [toast, opacity, translateY]); // valeurs partagées Reanimated : stables, mais déclarées
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

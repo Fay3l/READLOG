@@ -1,0 +1,33 @@
+# Blueprint Render : décrit le service à créer (Render → New → Blueprint → choisir ce dépôt).
+# Les valeurs "sync: false" sont des secrets : Render te les demandera à la création,
+# elles ne sont jamais écrites dans le dépôt.
+services:
+  - type: web
+    name: readlog-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # --proxy-headers : Render est un proxy ; sans ça, toutes les requêtes semblent venir
+    # de la même IP et le rate limiting bloquerait tout le monde en même temps.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATABASE_URL       # URL Postgres (Neon, Supabase ou Render Postgres)
+        sync: false
+      - key: SECRET_KEY         # Render la génère aléatoirement
+        generateValue: true
+      - key: CORS_ORIGINS       # URL de la version web, ex : https://readlog.expo.app
+        sync: false
+      - key: GOOGLE_BOOKS_API_KEY
+        sync: false
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
