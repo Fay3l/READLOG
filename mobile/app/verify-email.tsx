@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TextInput,
+  type TextInputInstance,
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
@@ -34,7 +35,7 @@ export default function VerifyEmail() {
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  const inputRefs = useRef<Array<TextInputInstance | null>>([]);
 
   const code = digits.join('');
   const isComplete = code.length === CODE_LENGTH;

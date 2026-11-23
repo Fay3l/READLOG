@@ -3,6 +3,7 @@ import { SessionProvider, useSession } from '@/auth/ctx';
 import { SplashScreenController } from '@/auth/splash';
 import { ThemeProvider, useThemeContext } from '@/constants/themecontext';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { ToastProvider } from '@/components/toast/toast_context';
 import { Toast } from '@/components/toast/toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -25,6 +26,8 @@ export default function Root() {
     <SessionProvider>
       <SplashScreenController />
       <StatusBar hidden />
+      {/* remplace "androidNavigationBar" de app.json (supprimé en SDK 58) */}
+      <NavigationBar hidden style="light" />
       {/* ✅ ThemeProvider doit ENGLOBER RootNavigator, sinon useThemeContext()
           dans RootNavigator lit la valeur par défaut du contexte */}
       <ThemeProvider>

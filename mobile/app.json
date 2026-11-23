@@ -48,7 +48,6 @@
       ],
       "expo-font",
       "expo-secure-store",
-      "expo-barcode-scanner",
       "@react-native-community/datetimepicker"
     ],
     "experiments": {
