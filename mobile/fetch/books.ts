@@ -64,3 +64,14 @@ export async function remove_userbook(book_id: string) {
     return false;
   }
 }
+
+export async function update_userbook(book_id: string, data: { status?: string; current_page?: number }) {
+  try {
+    await api.patch(`/users/book/${book_id}`, data)
+    const books = await get_userbooks();
+    useUserBookStore.getState().setUserBooks(books);
+    return { ok: true, book: books.find(b => b.id === book_id) ?? null }
+  } catch (err: any) {
+    return { ok: false, book: null, message: err.response?.data?.detail ?? 'Erreur réseau' }
+  }
+}

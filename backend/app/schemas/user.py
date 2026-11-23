@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from app.schemas.book import GetUserBook
 from app.schemas.reading_reminder import GetReadingReminder
@@ -33,11 +34,17 @@ class OnboardingSchema(BaseModel):
 
 
 class UserStats(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    year: int
     total_books: int
     reading_books: int
     finished_books: int
     to_read_books: int
-    page_reads: int
-    reading_goals: int
-    reading_weeks: int
+    pages_read: int
+    reading_goal: int
+    finished_this_year: int
+    books_per_month: list[int]  # 12 valeurs : janvier → décembre
+
+
+class UpdateUserBook(BaseModel):
+    status: Literal["to_read", "reading", "finished"] | None = None
+    current_page: int | None = Field(default=None, ge=0)

@@ -5,6 +5,7 @@ import Books from "@/assets/icon/books.svg"
 import BarChart from "@/assets/icon/bar-chart.svg"
 import User from "@/assets/icon/user.svg"
 import { useTheme } from "@/constants/themecontext";
+import { TAB_BAR_HEIGHT, TAB_BAR_MARGIN_BOTTOM } from "@/constants/layout";
 
 
 
@@ -29,16 +30,18 @@ export default function TabsLayout() {
             backgroundColor: theme.colors.bg.nav,
             borderTopColor: theme.colors.border.inactive,
             borderRadius: theme.radius.xl,
-            marginBottom:30,
+            marginBottom: TAB_BAR_MARGIN_BOTTOM,
             marginLeft:20,
             marginRight:20,
             paddingTop:5,
             paddingBottom:5,
             flex:1,
-            height:65,
-            alignItems:'center',
-            justifyContent:'center',
+            height: TAB_BAR_HEIGHT,
             position: 'absolute',
+        },
+        // ✅ chaque onglet prend 1/3 de la largeur (le alignItems:'center' de la barre les tassait au milieu)
+        tabBarItemStyle: {
+            flex: 1,
         },
     }}>
         <Tabs.Screen name="index" options={{
@@ -69,11 +72,16 @@ function useLayoutStyles() {
         tabBarIcon: {
             fontSize: Theme.fontSizes.md
         },
+        // ✅ police du thème + taille réduite : "Bibliothèque" et "Statistiques" ne se touchent plus
         tabBarLabel: {
             color: Theme.colors.text.secondary,
+            fontFamily: Theme.fonts.dmSans.regular,
+            fontSize: 12,
         },
         tabBarLabelActive: {
             color: Theme.colors.accent.default,
+            fontFamily: Theme.fonts.dmSans.medium,
+            fontSize: 12,
         },
         tabBarStyle: {
             backgroundColor: Theme.colors.bg.nav,

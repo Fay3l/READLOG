@@ -1,125 +1,335 @@
 import { Screen } from "@/components/screen";
 import { useTheme } from "@/constants/themecontext";
-import { toBookResult, useBookStore } from "@/types/books";
+import { AppTheme } from "@/constants/theme";
+import { GetBook, toBookResult, useBookStore } from "@/types/books";
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo } from "react";
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import OpenBook from "@/assets/icon/open-book.svg"
-import { add_userbook, remove_userbook } from "@/fetch/books";
+import * as Progress from 'react-native-progress'
+import { add_userbook, remove_userbook, update_userbook } from "@/fetch/books";
 import { useToast } from "@/components/toast/toast_context";
+import { BookDescription, BookHero } from "@/components/bookhero";
+
+const STATUSES = [
+    { key: "to_read", label: "À lire" },
+    { key: "reading", label: "En cours" },
+    { key: "finished", label: "Terminé" },
+]
 
 export default function BookDetail() {
     const theme = useTheme()
-    const storedBook = useBookStore(s => s.book);
-    const book = storedBook;
+    const styles = useStyles(theme)
+    const book = useBookStore(s => s.book);
+    const setBook = useBookStore(s => s.setBook);
     const { page } = useLocalSearchParams<{ page: string }>();
-    const styles = useStyles()
-    const {show} = useToast()
-    if (!book) {
-        return null;
-    }
+    const { show } = useToast()
+    const [busy, setBusy] = useState(false)
+    const [confirmRemove, setConfirmRemove] = useState(false)
+    const [pageInput, setPageInput] = useState(String(book?.current_page ?? 0))
 
-    const navigate = () => {
+    useEffect(() => { setPageInput(String(book?.current_page ?? 0)) }, [book?.current_page])
+
+    if (!book) return null;
+
+    const inLibrary = !!book.id
+
+    const goBack = () => {
         // ✅ l'écran est empilé dans le Stack : on revient simplement en arrière
         if (router.canGoBack()) router.back()
         else router.replace((page || '/(tabs)') as Parameters<typeof router.replace>[0])
     }
-    const addBook= async()=>{
-        const rbook = toBookResult(book)
-        const res = await add_userbook(rbook)
-        if(res.ok){
-            show('Livre ajouté','success')
+
+    const addBook = async () => {
+        setBusy(true)
+        const res = await add_userbook(toBookResult(book))
+        setBusy(false)
+        if (res.ok) {
+            show('Livre ajouté', 'success')
             router.replace('/(tabs)')
-        }
-        else show(res.message ?? 'Livre pas ajouté','error')
-        
+        } else show(res.message ?? 'Livre pas ajouté', 'error')
     }
-    const removeBook = async()=>{
-        if(!book.id){
-            console.log(book.id)
-            show('Veuillez réessayez','error')
-            return
-        }
+
+    const removeBook = async () => {
+        // 1er appui : demande de confirmation, 2e appui : suppression
+        if (!confirmRemove) { setConfirmRemove(true); return }
+        setBusy(true)
         const res = await remove_userbook(book.id)
-        if(res){
-            show('Livre supprimé','success')
+        setBusy(false)
+        if (res) {
+            show('Livre supprimé', 'success')
             router.replace('/(tabs)')
-        }
-        else show('Livre pas supprimé','error')
+        } else show('Livre pas supprimé', 'error')
     }
+
+    const update = async (data: { status?: string; current_page?: number }) => {
+        setBusy(true)
+        const res = await update_userbook(book.id, data)
+        setBusy(false)
+        if (res.ok && res.book) setBook(res.book as GetBook)
+        else show(res.message ?? 'Mise à jour impossible', 'error')
+    }
+
+    const savePage = (value: number) => {
+        const max = book.page_count ?? Number.MAX_SAFE_INTEGER
+        const next = Math.max(0, Math.min(value, max))
+        setPageInput(String(next))
+        if (next === book.current_page) return
+        // terminer automatiquement quand on atteint la dernière page
+        const finished = book.page_count && next >= book.page_count
+        void update({ current_page: next, ...(finished ? { status: "finished" } : book.status === "to_read" && next > 0 ? { status: "reading" } : {}) })
+    }
+
+    const progress = book.page_count ? Math.min(book.current_page / book.page_count, 1) : 0
+
     return (
         <Screen>
-            <SafeAreaView style={{ flex: 1, margin: 20 }}>
-                <ScrollView style={{ marginBottom: 20 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
-                        <View>
-                            <TouchableOpacity style={styles.button_back} onPress={navigate}>
-                                <Text style={styles.button_text_back}>Retour</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                    <View style={{ alignItems: 'center', gap: 10, marginTop: 20, justifyContent: 'center' }}>
-                        {book.cover_url ?
-                            <Image width={100} height={150} source={{ uri: book.cover_url }} ></Image>
-                            :
-                            <View>
-                                <OpenBook width={150} height={150} />
+            <SafeAreaView style={{ flex: 1 }}>
+                {/* ── Barre du haut ── */}
+                <View style={styles.topbar}>
+                    <Pressable onPress={goBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Retour"
+                        style={({ pressed }) => [styles.back, pressed && { opacity: 0.7 }]}>
+                        <Text style={styles.back_text}>‹  Retour</Text>
+                    </Pressable>
+                    {busy ? <ActivityIndicator color={theme.colors.accent.default} /> : null}
+                </View>
+
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled">
+                    <BookHero
+                        title={book.title}
+                        author={book.author}
+                        coverUrl={book.cover_url}
+                        publishedYear={book.published_year}
+                        publisher={book.publisher}
+                        pageCount={book.page_count}
+                        genre={book.genres}
+                    />
+
+                    {inLibrary ? (
+                        <View style={styles.card}>
+                            <Text style={styles.overline}>Ma lecture</Text>
+
+                            {/* Statut */}
+                            <View style={styles.segmented}>
+                                {STATUSES.map(s => {
+                                    const active = book.status === s.key
+                                    return (
+                                        <Pressable key={s.key} disabled={busy || active}
+                                            onPress={() => update({ status: s.key })}
+                                            accessibilityRole="button" accessibilityState={{ selected: active }}
+                                            style={[styles.segment, active && styles.segment_active]}>
+                                            <Text style={[styles.segment_text, active && styles.segment_text_active]}>{s.label}</Text>
+                                        </Pressable>
+                                    )
+                                })}
                             </View>
-                        }
-                        <Text style={{ fontFamily: theme.fonts.playfair.bold, color: theme.colors.text.secondary }}>{book.title}</Text>
-                        <Text style={{ fontFamily: theme.fonts.playfair.bold, color: theme.colors.text.secondary }}>{book.author}</Text>
-                        <Text style={{ textAlign: 'center', fontFamily: theme.fonts.playfair.regular, color: theme.colors.text.primary }}>{book.publisher}</Text>
-                        <Text style={{ textAlign: 'center', fontFamily: theme.fonts.playfair.bold, color: theme.colors.text.hint }}>{book.published_year}</Text>
-                        <Text style={{ textAlign: 'center', fontFamily: theme.fonts.playfair.regular, color: theme.colors.text.label }}>Page: {book.page_count}</Text>
-                    </View>
-                    <View style={{ margin: 10 }}>
-                        {book.description ?
-                            <Text style={{ textAlign: 'center', fontFamily: theme.fonts.playfair.regular, color: theme.colors.text.muted }}>{book.description}</Text>
-                            :
-                            <Text style={{ textAlign: 'center', fontFamily: theme.fonts.playfair.regular, color: theme.colors.text.primary }}>Pas de description</Text>
-                        }
-                    </View>
-                    <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 30 }}>
-                        {
-                            book.id ?
-                                <View>
-                                    <TouchableOpacity onPress={removeBook}>
-                                        <Text style={{ color: theme.colors.status.abandoned }}>Supprimer de la bibliothèque</Text>
-                                    </TouchableOpacity>
+
+                            {/* Progression */}
+                            <View style={{ gap: 10 }}>
+                                <View style={styles.progress_header}>
+                                    <Text style={styles.label}>Page actuelle</Text>
+                                    {book.page_count ? <Text style={styles.percent}>{Math.round(progress * 100)} %</Text> : null}
                                 </View>
-                                :
-                                <View>
-                                    <TouchableOpacity onPress={addBook}>
-                                        <Text style={{ color: theme.colors.status.finished }}>Ajouter à la bibliothèque</Text>
-                                    </TouchableOpacity>
+                                {book.page_count ? (
+                                    <Progress.Bar width={null} height={6} borderWidth={0} borderRadius={3}
+                                        progress={progress} color={theme.colors.accent.default}
+                                        unfilledColor={theme.colors.border.progress} />
+                                ) : null}
+                                <View style={styles.stepper}>
+                                    <StepButton theme={theme} label="−10" onPress={() => savePage(book.current_page - 10)} disabled={busy} />
+                                    <View style={styles.page_field}>
+                                        <TextInput
+                                            value={pageInput}
+                                            onChangeText={t => setPageInput(t.replace(/[^0-9]/g, ''))}
+                                            onEndEditing={() => savePage(parseInt(pageInput || '0', 10))}
+                                            onSubmitEditing={() => savePage(parseInt(pageInput || '0', 10))}
+                                            keyboardType="number-pad"
+                                            returnKeyType="done"
+                                            style={styles.page_input}
+                                            accessibilityLabel="Page actuelle"
+                                        />
+                                        {book.page_count ? <Text style={styles.page_total}>/ {book.page_count}</Text> : null}
+                                    </View>
+                                    <StepButton theme={theme} label="+10" onPress={() => savePage(book.current_page + 10)} disabled={busy} />
                                 </View>
-                        }
-                    </View>
+                            </View>
+                        </View>
+                    ) : null}
+
+                    <BookDescription text={book.description} />
+
+                    {/* ── Action principale ── */}
+                    {inLibrary ? (
+                        <Pressable onPress={removeBook} disabled={busy} accessibilityRole="button"
+                            style={({ pressed }) => [styles.remove, confirmRemove && styles.remove_confirm, pressed && { opacity: 0.7 }]}>
+                            <Text style={styles.remove_text}>
+                                {confirmRemove ? "Confirmer la suppression" : "Retirer de ma bibliothèque"}
+                            </Text>
+                        </Pressable>
+                    ) : (
+                        <Pressable onPress={addBook} disabled={busy} accessibilityRole="button"
+                            style={({ pressed }) => [styles.primary, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}>
+                            <Text style={styles.primary_text}>Ajouter à ma bibliothèque</Text>
+                        </Pressable>
+                    )}
                 </ScrollView>
             </SafeAreaView>
         </Screen>
     )
 }
 
-function useStyles() {
-    const theme = useTheme()
+function StepButton({ theme, label, onPress, disabled }: { theme: AppTheme; label: string; onPress: () => void; disabled: boolean }) {
+    return (
+        <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button"
+            accessibilityLabel={`${label} pages`}
+            style={({ pressed }) => ({
+                width: 56, paddingVertical: 12, alignItems: 'center',
+                borderRadius: theme.radius.md, backgroundColor: theme.colors.accent.ghost,
+                opacity: pressed ? 0.7 : 1,
+            })}>
+            <Text style={{ fontFamily: theme.fonts.dmSans.medium, fontSize: theme.fontSizes.base, color: theme.colors.accent.default }}>{label}</Text>
+        </Pressable>
+    )
+}
+
+function useStyles(theme: AppTheme) {
     return useMemo(() => StyleSheet.create({
-        button_back: {
-            flex: 1,
-            justifyContent: 'center',
+        topbar: {
+            flexDirection: 'row',
             alignItems: 'center',
-            padding: 10,
-            gap: 3,
-            borderRadius: 8,
-            borderWidth: 1,
-            backgroundColor: theme.colors.bg.banner,
-            borderColor: theme.gradients.banner[1],
-            paddingVertical: 15
+            justifyContent: 'space-between',
+            paddingHorizontal: 20,
+            paddingVertical: 8,
         },
-        button_text_back: {
+        back: {
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: theme.radius.full,
+            backgroundColor: theme.colors.accent.ghost,
+        },
+        back_text: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.sm,
+            color: theme.colors.text.primary,
+        },
+        content: {
+            paddingHorizontal: 20,
+            paddingTop: 12,
+            paddingBottom: 40,
+            gap: 26,
+        },
+        card: {
+            backgroundColor: theme.colors.bg.card,
+            borderWidth: 1,
+            borderColor: theme.colors.border.card,
+            borderRadius: theme.radius.lg,
+            padding: 16,
+            gap: 18,
+        },
+        overline: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.xs,
+            letterSpacing: 1,
+            textTransform: 'uppercase',
+            color: theme.colors.text.label,
+        },
+        segmented: {
+            flexDirection: 'row',
+            padding: 4,
+            gap: 4,
+            borderRadius: theme.radius.md,
+            backgroundColor: theme.colors.bg.input,
+        },
+        segment: {
+            flex: 1,
+            paddingVertical: 10,
+            alignItems: 'center',
+            borderRadius: theme.radius.sm,
+        },
+        segment_active: {
+            backgroundColor: theme.colors.accent.default,
+        },
+        segment_text: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.sm,
+            color: theme.colors.text.secondary,
+        },
+        segment_text_active: {
+            color: theme.colors.text.onAccent,
+        },
+        progress_header: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+        },
+        label: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.sm,
+            color: theme.colors.text.secondary,
+        },
+        percent: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.sm,
+            color: theme.colors.accent.default,
+        },
+        stepper: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+        },
+        page_field: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            borderRadius: theme.radius.md,
+            borderWidth: 1,
+            borderColor: theme.colors.border.inactive,
+            backgroundColor: theme.colors.bg.input,
+            paddingHorizontal: 12,
+        },
+        page_input: {
+            width: 64,
+            paddingVertical: 10,
             textAlign: 'center',
-            color: theme.colors.text.secondary
-        }
+            fontFamily: theme.fonts.playfair.bold,
+            fontSize: theme.fontSizes.lg,
+            color: theme.colors.text.primary,
+        },
+        page_total: {
+            flexShrink: 0,
+            fontFamily: theme.fonts.dmSans.regular,
+            fontSize: theme.fontSizes.base,
+            color: theme.colors.text.label,
+        },
+        primary: {
+            backgroundColor: theme.colors.accent.default,
+            borderRadius: theme.radius.lg,
+            paddingVertical: 17,
+            alignItems: 'center',
+        },
+        primary_text: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.md,
+            color: theme.colors.text.onAccent,
+        },
+        remove: {
+            borderRadius: theme.radius.lg,
+            paddingVertical: 15,
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: theme.colors.border.inactive,
+        },
+        remove_confirm: {
+            borderColor: theme.colors.status.abandoned,
+            backgroundColor: theme.colors.status.abandonedBg,
+        },
+        remove_text: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.base,
+            color: theme.colors.status.abandoned,
+        },
     }), [theme])
 }
