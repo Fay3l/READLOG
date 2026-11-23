@@ -37,11 +37,14 @@ export default function LogIn() {
                     <Text style={{ color: theme.gradients.premium[0] }}>Mot de passe oublié ?</Text>
                 </View>
                 <View>
-                    <TouchableOpacity style={styles.button_style} onPress={() => {
-                        console.log(password, email)
-                        login(password, email);
-                        show('Connecté','success')
-                        router.replace("/(tabs)");
+                    <TouchableOpacity style={styles.button_style} onPress={async () => {
+                        // ✅ on attend le résultat : avant, "Connecté" s'affichait même si le mot de passe était faux
+                        try {
+                            await login(password, email);
+                            show('Connecté', 'success')
+                        } catch (err) {
+                            show(typeof err === 'string' ? err : 'Identifiants incorrects', 'error')
+                        }
                     }}>
                         <Text style={styles.button_text}>
                             Se connecter

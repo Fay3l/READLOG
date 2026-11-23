@@ -9,11 +9,13 @@ import { Toast } from '@/components/toast/toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEffect } from 'react';
 import * as SystemUI from 'expo-system-ui';
+// ⚠️ SDK 58 : expo-router embarque sa propre copie de React Navigation,
+// il faut importer depuis 'expo-router' et non '@react-navigation/native'
 import {
   ThemeProvider as NavigationThemeProvider,
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationLightTheme,
-} from '@react-navigation/native';
+} from 'expo-router';
 
 
 export const unstable_settings = {
@@ -93,7 +95,14 @@ function RootNavigator() {
           </Stack.Screen>
         </Stack.Protected>
 
+        {/* Sans session (pas de token) : le 1er écran de ce groupe est affiché → page d'accueil.
+            Avec une session enregistrée, ce groupe est inaccessible → (tabs) directement. */}
         <Stack.Protected guard={!session}>
+          <Stack.Screen name='auth'
+            options={{
+              headerShown: false,
+            }}>
+          </Stack.Screen>
           <Stack.Screen name='login'
             options={{
               headerShown: false,
@@ -110,6 +119,13 @@ function RootNavigator() {
             }}>
           </Stack.Screen>
 
+        </Stack.Protected>
+
+        {/* ⚠️ SDK 58 : un onglet caché (href: null) redirige vers l'accueil.
+            Les écrans "détail" vivent donc dans le Stack, au-dessus des onglets. */}
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name='searchbooks' options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name='bookdetail' options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!!session}>

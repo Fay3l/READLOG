@@ -13,6 +13,18 @@ function useAsyncState<T>(
   ) as UseStateHook<T>;
 }
 
+// Lecture compatible web (localStorage) et mobile (SecureStore)
+export async function getStorageItemAsync(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    try {
+      return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+    } catch {
+      return null;
+    }
+  }
+  return SecureStore.getItemAsync(key);
+}
+
 export async function setStorageItemAsync(key: string, value: string | null) {
   if (Platform.OS === 'web') {
     try {

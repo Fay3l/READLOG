@@ -13,7 +13,7 @@ import { useUserBookStore } from '@/types/books';
 const AuthContext = createContext<{
     signUp: (pw: string, user: string, email: string) => Promise<string | null>;
     signOut: () => void;
-    logIn: (pw: string, email: string) => void;
+    logIn: (pw: string, email: string) => Promise<void>;
     verifyemail: (code: string, email: string) => void;
     setSession: (s: string | null) => void;
     session?: string | null;
@@ -22,7 +22,7 @@ const AuthContext = createContext<{
 }>({
     signUp: () => Promise.resolve(null),
     signOut: () => null,
-    logIn: () => null,
+    logIn: () => Promise.resolve(),
     setSession: () => null,
     verifyemail: () => null,
     session: null,
@@ -99,7 +99,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
                         }
                     } catch (err: any) {
                         setSession(null)
-                        throw err.response?.data?.detail
+                        throw err.response?.data?.detail ?? 'Connexion impossible, vérifie ta connexion internet'
                     }
                 },
                 verifyemail: async (code, email) => {

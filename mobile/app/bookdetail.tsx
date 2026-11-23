@@ -21,8 +21,9 @@ export default function BookDetail() {
     }
 
     const navigate = () => {
-        const target = page as Parameters<typeof router.replace>[0];
-        router.replace(target)
+        // ✅ l'écran est empilé dans le Stack : on revient simplement en arrière
+        if (router.canGoBack()) router.back()
+        else router.replace((page || '/(tabs)') as Parameters<typeof router.replace>[0])
     }
     const addBook= async()=>{
         const rbook = toBookResult(book)
