@@ -1,4 +1,5 @@
 """ Table User """
+from app.database.utils import utcnow
 from datetime import datetime, timezone
 from ..database.base import Base
 from typing import List
@@ -27,7 +28,7 @@ class Books(Base):
     genres: Mapped[str | None ] = mapped_column(String,nullable=True, default=None)
     page_count: Mapped[int | None ] = mapped_column(Integer,nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),default=datetime.now(timezone.utc)
+        DateTime(timezone=True),default_factory=utcnow
     )
     userbooks: Mapped[list['UserBooks']] = relationship(
         default_factory=list

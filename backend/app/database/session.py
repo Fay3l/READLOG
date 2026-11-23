@@ -1,20 +1,34 @@
-from typing import Generator
-from sqlalchemy.orm import Session
+"""Connexion à la base : un moteur (engine) partagé, une session PAR REQUÊTE.
 
-# Référence vers l'instance DB créée dans main.py
-# Les routers importent get_db d'ici, jamais depuis main.py
-_db_instance = None
+Avant, une seule Session était partagée par toutes les requêtes et fermée à la fin de
+chacune : deux utilisateurs simultanés se marchaient dessus. Le moteur, lui, gère un pool
+de connexions et peut être partagé sans problème.
+"""
+from collections.abc import Generator
 
-def init_db(db_instance):
-    """Appelé une seule fois depuis main.py"""
-    global _db_instance
-    _db_instance = db_instance
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
+
+SessionLocal = sessionmaker(autoflush=False)
+engine: Engine | None = None
+
+
+def init_engine(url: str, echo: bool = False) -> Engine:
+    """Appelé une seule fois au démarrage (app/main.py)."""
+    global engine
+    # pool_pre_ping : vérifie qu'une connexion du pool est encore vivante avant de s'en servir
+    # (les bases hébergées coupent les connexions inactives)
+    # SQLite (tests, dev) interdit par défaut d'utiliser une connexion dans un autre thread
+    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
+    engine = create_engine(url, echo=echo, pool_pre_ping=True, connect_args=connect_args)
+    SessionLocal.configure(bind=engine)
+    return engine
+
 
 def get_db() -> Generator[Session, None, None]:
-    """Dépendance FastAPI — crée une session par requête"""
-    if _db_instance is None or _db_instance.session is None:
-        raise RuntimeError("Base de données non initialisée")
-    db = _db_instance.session
+    """Dépendance FastAPI : ouvre une session pour la requête et la ferme ensuite."""
+    db = SessionLocal()
     try:
         yield db
     finally:

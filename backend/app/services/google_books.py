@@ -1,10 +1,10 @@
-import os
+from app.core import config
 import httpx
 import asyncio
 from app.schemas.book import BookResult
 
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
-API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY')
+API_KEY = config.GOOGLE_BOOKS_API_KEY
 
 
 def _parse_item(item: dict) -> BookResult | None:

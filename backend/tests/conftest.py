@@ -1,26 +1,54 @@
-from uuid import uuid4
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.models.users import Users
-from app.database.base import Base
-from app.models.users import Users
-from app.models.books import Books
-from app.models.user_books import UserBooks
-from app.models.reading_reminders import ReadingReminders
-from app.models.quotes import Quotes
-from app.models.reading_notes import ReadingNotes
+import os
 
-# BDD SQLite en mémoire — rapide, jetée après chaque test
-TEST_DATABASE_URL = "sqlite:///:memory:"
+# ⚠️ Avant tout import de l'app : app/core/config.py exige ces variables au chargement
+os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only-0123456789")
 
+from uuid import uuid4  # noqa: E402
 
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+
+from app.core.rate_limit import ALL_LIMITERS  # noqa: E402
+from app.database.base import Base  # noqa: E402
+from app.database.session import get_db  # noqa: E402
+from app.main import app  # noqa: E402
+from app.models.books import Books  # noqa: E402
+from app.models.user_books import UserBooks  # noqa: E402
+from app.models.users import Users  # noqa: E402
+
+# BDD SQLite en mémoire — rapide, jetée à la fin des tests.
+# StaticPool : une seule connexion partagée, sinon chaque connexion (et le TestClient,
+# qui tourne dans un autre thread) verrait sa propre base vide.
 engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 
 TestingSessionLocal = sessionmaker(bind=engine)
+
+
+@pytest.fixture
+def client():
+    """Client HTTP sur l'API complète, branchée sur la base de test."""
+    def override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    for limiter in ALL_LIMITERS:  # chaque test repart avec des compteurs à zéro
+        limiter.reset()
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+
 
 # ── Crée toutes les tables avant les tests ────────
 

@@ -1,4 +1,5 @@
 """ Table User """
+from app.database.utils import utcnow
 from datetime import datetime, timezone, time
 from ..database.base import Base
 from typing import List  # pyright: ignore[reportMissingImports]
@@ -20,9 +21,9 @@ class ReadingReminders(Base):
     days: Mapped[list[str]] = mapped_column(
         JSON,
         nullable=False,
-        default=list,
+        default_factory=list,
     )
     is_active: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now(timezone.utc))
+        DateTime(timezone=True), default_factory=utcnow)
     user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'), default=None)

@@ -1,5 +1,6 @@
-from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 from uuid import UUID
 from app.schemas.book import GetUserBook
 from app.schemas.reading_reminder import GetReadingReminder
@@ -7,9 +8,10 @@ from datetime import datetime
 
 
 class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
+    # La validation se fait ici, avant même d'entrer dans la route : FastAPI répond 422 sinon
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=30)]
+    email: EmailStr
+    password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
 class GetUser(BaseModel):
@@ -27,10 +29,11 @@ class GetUser(BaseModel):
 
 
 class OnboardingSchema(BaseModel):
-    reading_goal:     int
-    preferred_genres: list[str]
-    reminder_time:    str | None = None   # ex: "21:00"
-    reminder_days:    list[str] | None = None  # ex: ["mon","wed","fri"]
+    reading_goal: int = Field(ge=1, le=365)
+    preferred_genres: list[Annotated[str, StringConstraints(max_length=50)]] = Field(max_length=20)
+    # "HH:MM" vérifié ici : avant, une valeur mal formée faisait planter strptime (erreur 500)
+    reminder_time: Annotated[str, StringConstraints(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")] | None = None
+    reminder_days: list[Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]] | None = None
 
 
 class UserStats(BaseModel):

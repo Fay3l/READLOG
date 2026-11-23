@@ -1,4 +1,5 @@
 """ Table User """
+from app.database.utils import utcnow
 import datetime
 from typing import Annotated
 from ..database.base import Base # pyright: ignore[reportMissingImports]
@@ -23,7 +24,7 @@ class Users(Base):
     avatar_url: Mapped[str] = mapped_column(String, default="")
     reading_goal: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now(timezone.utc)
+        DateTime(timezone=True), default_factory=utcnow
     )
     email_verified:       Mapped[bool] = mapped_column(default=False)
     verification_code:    Mapped[str | None] = mapped_column(default=None)
@@ -33,8 +34,8 @@ class Users(Base):
     preferred_genres:     Mapped[list[str]] = mapped_column(JSON,default_factory=list)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.now(timezone.utc),
-        onupdate=datetime.now(timezone.utc)
+        default_factory=utcnow,
+        onupdate=utcnow
     )
     userbooks: Mapped[list['UserBooks']] = relationship(
         default_factory=list

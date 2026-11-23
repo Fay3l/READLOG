@@ -15,10 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/constants/themecontext';
 import { useToast } from '@/components/toast/toast_context';
 import { Screen } from '@/components/screen';
-import api from '@/lib/api';
 import { StepDots } from '@/components/stepdots';
 import { useSession } from '@/auth/ctx';
-import { useStorageState } from '@/auth/useStorageState';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30; // secondes
@@ -26,8 +24,7 @@ const RESEND_COOLDOWN = 30; // secondes
 export default function VerifyEmail() {
   const theme = useTheme();          // hooks tous en haut
   const styles = useStyles();
-  const {verifyemail,setSession} = useSession()
-  const [[, token], setToken] = useStorageState('token');
+  const { verifyEmail, resendCode } = useSession()
   const { show } = useToast();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
@@ -90,28 +87,26 @@ export default function VerifyEmail() {
   async function handleVerify() {
     setLoading(true);
     setError('');
-    try {
-      verifyemail(code, email)
+    // ✅ on attend la réponse : avant, "Email vérifié" s'affichait même avec un mauvais code
+    const res = await verifyEmail(code, email);
+    setLoading(false);
+    if (res.ok) {
       show('Email vérifié 🎉', 'success');
-    } catch (err: any) {
-      console.log(err)
-      setError('Code incorrect');
+    } else {
+      setError(res.message);
       setDigits(new Array(CODE_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
-    } finally {
-      setLoading(false);
     }
   }
 
   async function handleResend() {
     if (cooldown > 0) return;
-    try {
-      const res = await api.post(`/api/resend-code/?email=${email}`);
-      console.log(res.data?.detail)
-      show('res.data as string', 'info');
+    const res = await resendCode(email);
+    if (res.ok) {
+      show('Nouveau code envoyé, regarde tes e-mails', 'info');
       setCooldown(RESEND_COOLDOWN);
-    } catch {
-      show("Impossible d'envoyer le code, réessaie", 'error');
+    } else {
+      show(res.message, 'error');
     }
   }
 

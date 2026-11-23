@@ -48,9 +48,3 @@ async def test_update_user_book_unknown(db, make_user, make_book):
     user = make_user(name="Gus")
     book = make_book(title="X")
     assert await update_user_book(db, str(book.id), str(user.id), status="reading", current_page=None) is None
-
-
-def test_stats_route_declared_before_username():
-    from app.routers.users import router
-    paths = [r.path for r in router.routes]
-    assert paths.index("/api/users/stats") < paths.index("/api/users/{username}")

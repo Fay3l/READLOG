@@ -1,42 +1,47 @@
+import logging
+from contextlib import asynccontextmanager
 
-import os
-from fastapi import FastAPI # pyright: ignore[reportMissingImports]
-from dotenv import load_dotenv # pyright: ignore[reportMissingImports]
-from fastapi.middleware.cors import CORSMiddleware # pyright: ignore[reportMissingImports]
-from .routers import users,auth,books
-from .database.db import DB
-from .database.session import init_db
-from .models.users import Users
-from .models.books import Books
-from .models.user_books import UserBooks
-from .models.reading_reminders import ReadingReminders
-from .models.quotes import Quotes
-from .models.reading_notes import ReadingNotes
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.core import config
+from app.database.base import Base
+from app.database.session import init_engine
+from app.models import books, quotes, reading_notes, reading_reminders, user_books, users  # noqa: F401  (enregistre les tables)
+from app.routers import auth
+from app.routers import books as books_router
+from app.routers import users as users_router
 
-load_dotenv()
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-app = FastAPI()
+engine = init_engine(config.DATABASE_URL, echo=config.SQL_ECHO)
 
 
-origins = ["*"]
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Crée les tables manquantes (utile sur une base neuve). Les évolutions de schéma
+    # d'une base existante passent par Alembic : `alembic upgrade head`.
+    Base.metadata.create_all(engine)
+    yield
+
+
+app = FastAPI(title="ReadLog API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=config.CORS_ORIGINS,
+    # Le jeton voyage dans l'en-tête Authorization, pas dans un cookie : pas besoin de credentials
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-database = DB(DATABASE_URL)
-database.connect()
-init_db(database)
-app.include_router(users.router)
 app.include_router(auth.router)
-app.include_router(books.router)
+app.include_router(users_router.router)
+app.include_router(books_router.router)
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+
+@app.get("/health", tags=["health"])
+async def health():
+    """Utilisé par l'hébergeur pour vérifier que l'API répond."""
+    return {"status": "ok"}

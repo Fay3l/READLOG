@@ -36,16 +36,14 @@ export default function SignUp() {
                 <Label name='Mot de passe' value={password} setValue={setPassword}></Label>
                 <ButtonPrimary style={{ marginTop: 15 }} title='Continuer →' onPress={() => {
                     void (async () => {
-                        console.log(name, password, email)
-                        const response = await signup(password, name, email);
-                        if (response) {
-                            show(`Compte Inscrit Code:${response}`, 'success')
-                            router.push({
-                                pathname: '/verify-email',
-                                params: { email: email },
-                            })
+                        const res = await signup(password, name.trim(), email.trim());
+                        if (res.ok) {
+                            // ✅ le code n'est plus affiché ici : il est envoyé par e-mail
+                            show('Compte créé, un code t\'a été envoyé par e-mail', 'success')
+                            router.push({ pathname: '/verify-email', params: { email: email.trim() } })
+                        } else {
+                            show(res.message, 'error')
                         }
-                        // Navigate after signing in. You may want to tweak this to ensure sign-in is successful before navigating.
                     })();
                 }}></ButtonPrimary>
                 <View style={{ position: 'absolute', bottom: '7%', left: '20%', right: '20%' }}>

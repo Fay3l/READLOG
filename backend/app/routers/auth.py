@@ -1,172 +1,86 @@
-import os
-from datetime import datetime, timedelta, timezone
-from typing import Annotated
-from fastapi.encoders import jsonable_encoder
-from jose import ExpiredSignatureError, jwt
-from fastapi import Depends, HTTPException, status, APIRouter
+"""Inscription, vérification de l'e-mail et connexion."""
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jwt import InvalidTokenError
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
-from pwdlib import PasswordHash
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
-from app.models.users import Users
-from ..schemas.user import GetUser, UserCreate
-from ..services.email import generate_code, send_verification_email
-from ..database.session import get_db
-from dotenv import load_dotenv  # pyright: ignore[reportMissingImports]
-from ..repositories.users import create_user, user_resend_code, verify_user, get_user_by_name, verify_user_email
-load_dotenv()
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE = int(os.getenv('ACCESS_TOKEN_EXPIRE', 30))
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-
-router = APIRouter(tags=["auth"])
-password_hash = PasswordHash.recommended()
-ph = PasswordHasher(
-    time_cost=2,      # nombre d'itérations
-    memory_cost=65536,  # mémoire utilisée (64 MB)
-    parallelism=2,    # threads parallèles
+from app.core.rate_limit import login_limiter, resend_limiter, signup_limiter, verify_limiter
+from app.core.security import create_access_token, decode_access_token, hash_password, verify_password
+from app.database.session import get_db
+from app.repositories.users import (
+    account_exists,
+    create_user,
+    find_user_by_login,
+    get_user_by_id,
+    renew_verification_code,
+    verify_user_email,
 )
+from app.schemas.token import Message, Token
+from app.schemas.user import GetUser, UserCreate
+from app.services.email import send_verification_email
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+router = APIRouter(prefix="/api", tags=["auth"])
+
+# Un seul message pour "compte inconnu" et "mauvais mot de passe" :
+# des messages différents permettraient de tester quels e-mails sont inscrits.
+INVALID_CREDENTIALS = "E-mail ou mot de passe incorrect"
+INVALID_CODE = "Code incorrect ou expiré"
 
 
-def hash_password(password: str) -> str:
-    return ph.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    try:
-        return ph.verify(hashed_password, plain_password)
-    except (VerifyMismatchError, VerificationError, InvalidHashError):
-        return False
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-# auth.py (ou là où se trouve ton get_current_user actuel)
-
-
-async def get_current_user_orm(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> Users:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except InvalidTokenError:
-        raise credentials_exception
-    user = db.query(Users).filter(Users.name == username).first()
-    if not user:
-        raise credentials_exception
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> GetUser:
+    user_id = decode_access_token(token)
+    user = get_user_by_id(db, user_id) if user_id else None
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expirée, reconnecte-toi",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except (InvalidTokenError, ExpiredSignatureError) as exc:
-        raise credentials_exception
-    user = await get_user_by_name(name=username, db=db)
-    if not user:
-        raise credentials_exception
-    print(user)
-    return user
-
-
-async def require_verified_email(current_user: GetUser = Depends(get_current_user)):
+async def require_verified_email(current_user: GetUser = Depends(get_current_user)) -> GetUser:
     if not current_user.email_verified:
-        raise HTTPException(status_code=403, detail="Email non vérifié")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email non vérifié")
     return current_user
 
 
-@router.post("/api/login")
-async def authenticate_user(user: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    data = jsonable_encoder(user)
-    print(data)
-    get_user = await verify_user(db=db, name=data["username"], email=data["username"])
-    if not get_user:
-        raise HTTPException(status_code=401, detail="Le compte n'existe pas")
-    if not get_user.email_verified:
-        raise HTTPException(status_code=401, detail="Email non vérifié")
-    if (verify_password(data["password"], get_user.password_hashed)):
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
-        access_token = create_access_token(
-            data={"sub": get_user.name}, expires_delta=access_token_expires
-        )
-        return {"access_token": access_token, "token_type": "bearer"}
-    else:
-        raise HTTPException(
-            status_code=400, detail="Incorrect username or password")
+@router.post("/login", response_model=Token, dependencies=[Depends(login_limiter)])
+async def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = find_user_by_login(db, form.username)
+    # verify_password est appelé même si l'utilisateur n'existe pas (temps de réponse identique)
+    if not verify_password(form.password, user.password_hash if user else None):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=INVALID_CREDENTIALS)
+    # On ne parle de l'e-mail non vérifié qu'APRÈS avoir validé le mot de passe
+    if not user.email_verified:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email non vérifié")
+    return Token(access_token=create_access_token(str(user.id)))
 
 
-@router.post("/api/signup")
-async def create_login(user: UserCreate, db: Session = Depends(get_db)):
-    if (user):
-        code = generate_code()
-        user.password = hash_password(user.password)
-        # if (connectionsql.sql.username_duplicate(data["name"])):
-        now = datetime.now()
-        print('NOW AU MOMENT DU CALCUL:', now)
-        expired = now + timedelta(minutes=15)
-        print('EXPIRED CALCULÉ:', expired)
-        res = await create_user(db=db, uc=user, code=code, expired=expired)
-        if res:
-            await send_verification_email(user.email, code)
-            return {"detail": "Compte créé, vérifie ton email", "code": code}
-        raise HTTPException(
-            status_code=400, detail="Réessayez l'inscription")
-    else:
-        raise HTTPException(
-            status_code=400, detail="Empty username,email or password")
-
-# ── Vérification du code ──────────────────────────
+@router.post("/signup", response_model=Message, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(signup_limiter)])
+async def signup(data: UserCreate, db: Session = Depends(get_db)):
+    if account_exists(db, str(data.email), data.name):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Un compte existe déjà avec cet e-mail ou ce nom")
+    user, code = create_user(db, data, hash_password(data.password))
+    await send_verification_email(user.email, code)
+    # ⚠️ le code n'est PAS dans la réponse : il est envoyé uniquement par e-mail
+    return Message(detail="Compte créé, vérifie ton e-mail")
 
 
-@router.post("/api/verify-email")
-async def verify_email(email: str, code: str, db: Session = Depends(get_db)):
-    res = await verify_user_email(email=email, db=db, code=code)
-    if res["code"] != 200:
-        raise HTTPException(status_code=res["code"], detail=res["detail"])
-    get_user = await verify_user(db=db, name="", email=email)
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE)
-    access_token = create_access_token(
-        data={"sub": get_user.name}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-# ── Renvoyer un nouveau code ───────────────────────
+@router.post("/verify-email", response_model=Token, dependencies=[Depends(verify_limiter)])
+async def verify_email(email: EmailStr, code: str, db: Session = Depends(get_db)):
+    user = verify_user_email(db, str(email), code.strip())
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=INVALID_CODE)
+    return Token(access_token=create_access_token(str(user.id)))
 
 
-@router.post("/api/resend-code")
-async def resend_code(email: str, db: Session = Depends(get_db)):
-    res = await user_resend_code(email=email, db=db)
-    if not res:
-        raise HTTPException(status_code=400, detail="Requête Invalide")
-
-    # await send_verification_email(email, res.code)
-    return {"detail": res["code"]}
+@router.post("/resend-code", response_model=Message, dependencies=[Depends(resend_limiter)])
+async def resend_code(email: EmailStr, db: Session = Depends(get_db)):
+    code = renew_verification_code(db, str(email))
+    if code:
+        await send_verification_email(str(email), code)
+    # Même réponse que l'e-mail existe ou non (pas d'énumération des comptes)
+    return Message(detail="Si un compte en attente existe, un nouveau code a été envoyé")

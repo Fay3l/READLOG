@@ -1,4 +1,5 @@
 """ Table User Books """
+from app.database.utils import utcnow
 from datetime import datetime, timezone
 from ..database.base import Base
 from uuid import UUID
@@ -10,11 +11,6 @@ from sqlalchemy import String, DateTime
 # pyright: ignore[reportMissingImports]
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func  # pyright: ignore[reportMissingImports]
-
-
-def _now() -> datetime:
-    # ⚠️ default=datetime.now(...) est évalué UNE fois à l'import : toutes les lignes avaient la même date
-    return datetime.now(timezone.utc)
 
 
 class UserBooks(Base):
@@ -32,12 +28,12 @@ class UserBooks(Base):
     current_page: Mapped[int] = mapped_column(default=0)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default_factory=_now,
-        onupdate=_now
+        default_factory=utcnow,
+        onupdate=utcnow
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default_factory=_now
+        default_factory=utcnow
     )
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), default=None)
     book_id: Mapped[UUID] = mapped_column(ForeignKey("books.id"), default=None)

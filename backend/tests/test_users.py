@@ -9,7 +9,7 @@ async def test_get_user_by_name_found(db, sample_user):
     # ARRANGE — sample_user existe déjà grâce à la fixture
 
     # ACT
-    result = await get_user_by_name("Alice", db)
+    result = get_user_by_name("Alice", db)
 
     # ASSERT
     assert result is not None
@@ -20,7 +20,7 @@ async def test_get_user_by_name_found(db, sample_user):
 @pytest.mark.asyncio
 async def test_get_user_by_name_not_found(db):
     # ACT
-    result = await get_user_by_name("Inconnu", db)
+    result = get_user_by_name("Inconnu", db)
     
     # ASSERT
     assert result is None 
@@ -29,7 +29,7 @@ async def test_get_user_by_name_not_found(db):
 @pytest.mark.asyncio
 async def test_get_user_by_name_case_sensitive(db, sample_user):
     # "alice" (minuscule) ≠ "Alice" → ne doit pas trouver
-    result = await get_user_by_name("alice", db)
+    result = get_user_by_name("alice", db)
 
 
     assert result is None
@@ -37,7 +37,7 @@ async def test_get_user_by_name_case_sensitive(db, sample_user):
 # ── Test 4 : nom vide ─────────────────────────────
 @pytest.mark.asyncio
 async def test_get_user_by_name_empty_string(db):
-    result = await get_user_by_name("", db)
+    result = get_user_by_name("", db)
 
     assert result is None
 
@@ -54,7 +54,7 @@ async def test_get_user_by_name_returns_correct_one(db, sample_user):
     db.add(bob)
     db.commit()
 
-    result = await get_user_by_name("Bob", db)
+    result = get_user_by_name("Bob", db)
 
 
     assert result.name == "Bob"
