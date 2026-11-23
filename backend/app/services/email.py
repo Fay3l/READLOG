@@ -1,4 +1,5 @@
 """Codes de vérification et envoi d'e-mails."""
+
 import logging
 import secrets
 

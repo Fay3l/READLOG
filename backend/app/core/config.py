@@ -3,6 +3,7 @@
 Centraliser la config évite les os.getenv() éparpillés et permet d'échouer tout de suite
 au démarrage si une valeur indispensable manque (plutôt qu'au premier login).
 """
+
 import os
 
 from dotenv import load_dotenv

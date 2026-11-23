@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { useSession } from '@/auth/ctx';
 import React from 'react';

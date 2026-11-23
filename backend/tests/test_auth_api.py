@@ -2,6 +2,7 @@
 
 Chaque test vérifie une règle de sécurité précise.
 """
+
 import logging
 import re
 from uuid import uuid4
@@ -27,8 +28,8 @@ def _login(client, login, password=PASSWORD):
 def test_signup_does_not_leak_verification_code(client, caplog):
     res, _, code = _signup(client, caplog)
     assert res.status_code == 201
-    assert code is not None                  # le code est bien généré (dans les logs serveur)
-    assert code not in res.text              # ... mais JAMAIS renvoyé au client
+    assert code is not None  # le code est bien généré (dans les logs serveur)
+    assert code not in res.text  # ... mais JAMAIS renvoyé au client
     assert "code" not in res.json()
 
 

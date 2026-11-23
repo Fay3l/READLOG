@@ -1,4 +1,5 @@
 """Mots de passe (Argon2) et jetons JWT."""
+
 from datetime import UTC, datetime, timedelta
 
 import jwt

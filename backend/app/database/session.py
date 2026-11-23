@@ -4,6 +4,7 @@ Avant, une seule Session était partagée par toutes les requêtes et fermée à
 chacune : deux utilisateurs simultanés se marchaient dessus. Le moteur, lui, gère un pool
 de connexions et peut être partagé sans problème.
 """
+
 from collections.abc import Generator
 
 from sqlalchemy import create_engine

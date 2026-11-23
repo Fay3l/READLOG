@@ -1,9 +1,8 @@
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useRef, useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View  } from 'react-native';
 import { router } from 'expo-router';
 import { search_books } from '@/fetch/books';
-import { Alert } from "react-native";
 import { useBookResultStore } from '@/types/books';
 import { useToast } from '@/components/toast/toast_context';
 
@@ -40,15 +39,15 @@ export default function Camera() {
       const res = await search_books(event.data);
 
       if (!res || res.length === 0) {
-        isScanning.current = false;  // ✅ déjà fait, bien
+        isScanning.current = false;
         show('Livre non trouvé', 'error');
         return;
       }
 
       setScannedBook(res[0]);
       router.push("/bookresult");
-    } catch (error) {
-      console.error(error);
+    } catch {
+      show('Recherche impossible, réessaie', 'error');
       isScanning.current = false;
     }
   }

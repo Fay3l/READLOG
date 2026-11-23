@@ -1,4 +1,5 @@
 """Accès à la base pour les comptes utilisateurs."""
+
 import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
@@ -20,15 +21,11 @@ def _as_utc(dt: datetime) -> datetime:
 def find_user_by_login(db: Session, login: str) -> Users | None:
     """Recherche par e-mail (insensible à la casse) ou par nom : on peut se connecter avec les deux."""
     login = login.strip()
-    return db.query(Users).filter(
-        or_(func.lower(Users.email) == login.lower(), Users.name == login)
-    ).first()
+    return db.query(Users).filter(or_(func.lower(Users.email) == login.lower(), Users.name == login)).first()
 
 
 def account_exists(db: Session, email: str, name: str) -> bool:
-    return db.query(Users).filter(
-        or_(func.lower(Users.email) == email.lower(), Users.name == name)
-    ).first() is not None
+    return db.query(Users).filter(or_(func.lower(Users.email) == email.lower(), Users.name == name)).first() is not None
 
 
 def create_user(db: Session, data: UserCreate, password_hash: str) -> tuple[Users, str]:

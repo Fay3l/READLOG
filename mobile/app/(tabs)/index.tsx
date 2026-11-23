@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
@@ -28,26 +28,17 @@ export default function Index() {
   const status = ["", "reading", "finished", "to_read"]
   const [state, setState] = useState("")
   const styles = useIndexStyles();
-  const [booksStatus, setBooksStatus] = useState<GetBook[]>(userBooks ?? [])
   const theme = useTheme()
   const searchbooks = () => {
     router.push('/searchbooks')
   }
 
-  useEffect(() => {
-    if (!userBooks) {
-      setBooksStatus([]);
-      return;
-    }
-    if (state === "") {
-      setBooksStatus(userBooks);
-      return;
-    }
-
-    setBooksStatus(
-      userBooks.filter((book: GetBook) => book.status === state)
-    );
-  }, [userBooks, state]);
+  // ✅ Valeur DÉRIVÉE : calculée à partir de userBooks et du filtre, pas besoin d'un 2e state
+  // synchronisé par un useEffect (qui provoquait un rendu supplémentaire à chaque changement)
+  const booksStatus = useMemo(() => {
+    if (!userBooks) return []
+    return state === "" ? userBooks : userBooks.filter((book: GetBook) => book.status === state)
+  }, [userBooks, state])
 
 
   if (isLoading || !user) {
@@ -79,22 +70,22 @@ export default function Index() {
         </View>
         <View style={{ flexDirection: 'row', gap: 5 }}>
           <View>
-            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "" ? theme.colors.accent.default : theme.colors.bg.banner }]} onPress={() => setState(status[0])}>
+            <TouchableOpacity style={[styles.status_button, { backgroundColor: state === "" ? theme.colors.accent.default : theme.colors.bg.banner }]} onPress={() => setState(status[0])}>
               <Text style={styles.status_button_text}>Tous</Text>
             </TouchableOpacity>
           </View>
           <View >
-            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "reading" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[1])}>
+            <TouchableOpacity style={[styles.status_button, { backgroundColor: state === "reading" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[1])}>
               <Text style={styles.status_button_text}>En cours</Text>
             </TouchableOpacity>
           </View>
           <View >
-            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "finished" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[2])}>
+            <TouchableOpacity style={[styles.status_button, { backgroundColor: state === "finished" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[2])}>
               <Text style={styles.status_button_text}>Terminé</Text>
             </TouchableOpacity>
           </View>
           <View >
-            <TouchableOpacity style={[styles.status_button, { backgroundColor: state == "to_read" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[3])}>
+            <TouchableOpacity style={[styles.status_button, { backgroundColor: state === "to_read" ? theme.gradients.premium[0] : theme.colors.bg.banner }]} onPress={() => setState(status[3])}>
               <Text style={styles.status_button_text}>À lire</Text>
             </TouchableOpacity>
           </View>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@/constants/themecontext';
 
 type TimePickerFieldProps = Readonly<{
@@ -30,14 +30,6 @@ export function TimePickerField({ label = 'Rappel de lecture', value, onChange }
     const styles = useStyles();
     const theme = useTheme();
     const [showPicker, setShowPicker] = useState(false);
-
-    function handleChange(event: DateTimePickerEvent, selected?: Date) {
-        // Sur Android, le picker se ferme tout seul après sélection
-        if (Platform.OS === 'android') setShowPicker(false);
-
-        if (event.type === 'dismissed' || !selected) return;
-        onChange(dateToTimeString(selected));
-    }
 
     return (
         <View style={styles.wrap}>

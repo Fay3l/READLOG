@@ -1,11 +1,11 @@
 import { useTheme } from "@/constants/themecontext"
 import { useMemo } from "react"
-import { StyleSheet, TouchableOpacity, View, Text } from "react-native"
+import { StyleProp, StyleSheet, TouchableOpacity, View, Text, ViewStyle } from "react-native"
 
 interface ButtonPrimaryProps{
     title:string,
     onPress: ()=> void | undefined,
-    style: {} | null
+    style: StyleProp<ViewStyle>
 }
 
 export function ButtonPrimary({title,onPress,style}:ButtonPrimaryProps) {

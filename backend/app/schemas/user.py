@@ -1,10 +1,10 @@
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
-from uuid import UUID
+
 from app.schemas.book import GetUserBook
 from app.schemas.reading_reminder import GetReadingReminder
-from datetime import datetime
 
 
 class UserCreate(BaseModel):

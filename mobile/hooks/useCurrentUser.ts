@@ -47,7 +47,7 @@ export function useCurrentUser() {
     }
 
     return () => { cancelled = true; };
-  }, [session]);
+  }, [session, setLoading, setUser, setUserBooks, signOut]);
 
   return {
     user,

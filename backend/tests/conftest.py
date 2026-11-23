@@ -35,6 +35,7 @@ TestingSessionLocal = sessionmaker(bind=engine)
 @pytest.fixture
 def client():
     """Client HTTP sur l'API complète, branchée sur la base de test."""
+
     def override_get_db():
         db = TestingSessionLocal()
         try:
@@ -58,6 +59,7 @@ def create_tables():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
 
 # ── Fixture db : session propre pour chaque test ──
 
@@ -87,7 +89,9 @@ def make_user(db):
         db.commit()
         db.refresh(user)
         return user
+
     return _make_user  # ← on retourne la FONCTION, pas un user
+
 
 # ── Factory pour Books ────────────────────────────
 
@@ -112,7 +116,9 @@ def make_book(db):
         db.commit()
         db.refresh(book)
         return book
+
     return _make_book
+
 
 # ── Factory pour UserBooks (relation) ─────────────
 
@@ -131,7 +137,9 @@ def make_user_book(db):
         db.commit()
         db.refresh(user_book)
         return user_book
+
     return _make_user_book
+
 
 # ── Garde sample_user si tu veux un raccourci simple ──
 

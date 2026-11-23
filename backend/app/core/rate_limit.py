@@ -7,6 +7,7 @@ et par adresse IP ; au-delà, l'API répond 429 Too Many Requests.
 Limite connue : le compteur vit dans la mémoire du processus. Avec plusieurs instances du
 serveur, il faudrait un stockage partagé (Redis). Pour une instance unique, c'est suffisant.
 """
+
 import time
 from collections import defaultdict, deque
 from threading import Lock

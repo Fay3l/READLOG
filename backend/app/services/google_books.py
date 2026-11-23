@@ -1,6 +1,8 @@
-from app.core import config
-import httpx
 import asyncio
+
+import httpx
+
+from app.core import config
 from app.schemas.book import BookResult
 
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
@@ -8,7 +10,7 @@ API_KEY = config.GOOGLE_BOOKS_API_KEY
 
 
 def _parse_item(item: dict) -> BookResult | None:
-    """"Parser un item de l'API Google Books en un BookResult """
+    """ "Parser un item de l'API Google Books en un BookResult"""
     info = item.get("volumeInfo", {})
     title = info.get("title")
     if not title:
@@ -21,10 +23,8 @@ def _parse_item(item: dict) -> BookResult | None:
 
     # ISBN 13 en priorité, sinon ISBN 10
     identifiers = info.get("industryIdentifiers", [])
-    isbn = next((i["identifier"] for i in identifiers
-                 if i["type"] == "ISBN_13"), None)
-    isbn = isbn or next((i["identifier"] for i in identifiers
-                         if i["type"] == "ISBN_10"), None)
+    isbn = next((i["identifier"] for i in identifiers if i["type"] == "ISBN_13"), None)
+    isbn = isbn or next((i["identifier"] for i in identifiers if i["type"] == "ISBN_10"), None)
 
     return BookResult(
         google_books_id=item["id"],
@@ -71,23 +71,6 @@ async def search_books(query: str, max_results: int = 10, retries: int = 2) -> l
 
     raise last_error
 
-# async def search_books(query: str, max_results: int = 10) -> list[BookResult]:
-#     """Recherche texte libre ou ISBN"""
-#     params = {
-#         "q": query,
-#         "maxResults": max_results,
-#         "printType": "books",
-#         "key": API_KEY,
-#     }
-#     async with httpx.AsyncClient() as client:
-#         response = await client.get(GOOGLE_BOOKS_URL, params=params, timeout=5.0)
-#         response.raise_for_status()
-
-#     items = response.json().get("items", [])
-#     print(f"Google Books API: {items} résultats pour '{query}'")
-#     results = [_parse_item(item) for item in items]
-#     return [r for r in results if r is not None]
-
 
 async def get_book_by_id(google_books_id: str) -> BookResult | None:
     """Récupérer un seul livre par ID"""
@@ -98,4 +81,3 @@ async def get_book_by_id(google_books_id: str) -> BookResult | None:
             return None
         response.raise_for_status()
     return _parse_item(response.json())
-

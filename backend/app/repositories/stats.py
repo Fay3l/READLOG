@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,7 @@ from app.schemas.user import GetUser, UserStats
 
 async def get_user_stats(user: GetUser, db: Session, year: int | None = None) -> UserStats:
     """Statistiques de lecture d'un utilisateur pour une année donnée (par défaut : l'année en cours)."""
-    year = year or datetime.now(timezone.utc).year
+    year = year or datetime.now(UTC).year
 
     rows = (
         db.query(UserBooks.status, UserBooks.current_page, UserBooks.finished_at, Books.page_count)

@@ -3,7 +3,7 @@ import { useTheme } from "@/constants/themecontext";
 import { AppTheme } from "@/constants/theme";
 import { GetBook, toBookResult, useBookStore } from "@/types/books";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Progress from 'react-native-progress'
@@ -27,8 +27,13 @@ export default function BookDetail() {
     const [busy, setBusy] = useState(false)
     const [confirmRemove, setConfirmRemove] = useState(false)
     const [pageInput, setPageInput] = useState(String(book?.current_page ?? 0))
-
-    useEffect(() => { setPageInput(String(book?.current_page ?? 0)) }, [book?.current_page])
+    // Quand la page enregistrée change (après une mise à jour), on resynchronise le champ.
+    // Ajuster un state pendant le rendu est le modèle recommandé par React plutôt qu'un useEffect.
+    const [syncedPage, setSyncedPage] = useState(book?.current_page)
+    if (book && book.current_page !== syncedPage) {
+        setSyncedPage(book.current_page)
+        setPageInput(String(book.current_page))
+    }
 
     if (!book) return null;
 
@@ -47,7 +52,7 @@ export default function BookDetail() {
         if (res.ok) {
             show('Livre ajouté', 'success')
             router.replace('/(tabs)')
-        } else show(res.message ?? 'Livre pas ajouté', 'error')
+        } else show(res.message, 'error')
     }
 
     const removeBook = async () => {
@@ -56,10 +61,10 @@ export default function BookDetail() {
         setBusy(true)
         const res = await remove_userbook(book.id)
         setBusy(false)
-        if (res) {
+        if (res.ok) {
             show('Livre supprimé', 'success')
             router.replace('/(tabs)')
-        } else show('Livre pas supprimé', 'error')
+        } else show(res.message, 'error')
     }
 
     const update = async (data: { status?: string; current_page?: number }) => {
@@ -67,7 +72,7 @@ export default function BookDetail() {
         const res = await update_userbook(book.id, data)
         setBusy(false)
         if (res.ok && res.book) setBook(res.book as GetBook)
-        else show(res.message ?? 'Mise à jour impossible', 'error')
+        else if (!res.ok) show(res.message, 'error')
     }
 
     const savePage = (value: number) => {

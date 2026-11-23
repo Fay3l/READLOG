@@ -1,27 +1,13 @@
-import {  useSession } from "@/auth/ctx";
-import { useStorageState } from "@/auth/useStorageState";
 import api from "@/lib/api";
 import { GetUser } from "@/types/users";
-import * as SecureStore from 'expo-secure-store';
-
-
 
 export async function getUser(): Promise<GetUser | null> {
   try {
-    
-    // ✅ l'intercepteur injecte le token automatiquement
+    // le jeton est ajouté automatiquement par l'intercepteur de lib/api.ts
     const res = await api.get<GetUser>('/users/me');
     return res.data;
-  } catch (err: any) {
-    console.log('STATUS :', err.response?.detail);
-
-
-    if (err.response?.status === 401) {
-      console.log('DETAIL :', err.response?.data);
-    }
-
+  } catch {
+    // 401 (jeton expiré) : géré par l'intercepteur de auth/ctx.tsx
     return null;
-    // ✅ le 401 est géré par l'intercepteur — pas besoin de le traiter ici
   }
 }
-

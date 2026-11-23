@@ -1,4 +1,5 @@
 """Recherche Google Books et ajout d'un livre à sa bibliothèque."""
+
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query

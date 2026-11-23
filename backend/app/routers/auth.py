@@ -1,4 +1,5 @@
 """Inscription, vérification de l'e-mail et connexion."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import EmailStr
@@ -58,11 +59,14 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
     return Token(access_token=create_access_token(str(user.id)))
 
 
-@router.post("/signup", response_model=Message, status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(signup_limiter)])
+@router.post(
+    "/signup", response_model=Message, status_code=status.HTTP_201_CREATED, dependencies=[Depends(signup_limiter)]
+)
 async def signup(data: UserCreate, db: Session = Depends(get_db)):
     if account_exists(db, str(data.email), data.name):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Un compte existe déjà avec cet e-mail ou ce nom")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Un compte existe déjà avec cet e-mail ou ce nom"
+        )
     user, code = create_user(db, data, hash_password(data.password))
     await send_verification_email(user.email, code)
     # ⚠️ le code n'est PAS dans la réponse : il est envoyé uniquement par e-mail

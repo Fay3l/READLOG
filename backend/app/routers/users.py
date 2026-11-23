@@ -1,4 +1,5 @@
 """Compte de l'utilisateur connecté : profil, bibliothèque, statistiques."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -53,8 +54,9 @@ async def delete_book(book_id: UUID, current_user: VerifiedUser, db: DB):
 
 @router.patch("/book/{book_id}")
 async def patch_book(book_id: UUID, data: UpdateUserBook, current_user: VerifiedUser, db: DB):
-    user_book = await update_user_book(db=db, b_id=str(book_id), u_id=str(current_user.id),
-                                       status=data.status, current_page=data.current_page)
+    user_book = await update_user_book(
+        db=db, b_id=str(book_id), u_id=str(current_user.id), status=data.status, current_page=data.current_page
+    )
     if user_book is None:
         raise HTTPException(status_code=404, detail=NOT_IN_LIBRARY)
     return {"status": user_book.status, "current_page": user_book.current_page}
