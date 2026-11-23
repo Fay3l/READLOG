@@ -53,8 +53,8 @@ function useStyles() {
     const theme = useTheme()
     return useMemo(() => StyleSheet.create({
         tag: {
-
-            padding: 5,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
             borderRadius: theme.radius.full,
             justifyContent: 'center',
             alignItems: 'center'
@@ -62,7 +62,8 @@ function useStyles() {
         text: {
             textAlign: 'center',
             fontFamily: theme.fonts.dmSans.regular,
-            fontSize: theme.fontSizes.xs
+            fontSize: theme.fontSizes.xs,
+            letterSpacing: 0.2,
         }
     }), [theme])
 }

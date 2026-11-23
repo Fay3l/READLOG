@@ -2,14 +2,15 @@
 
 import axios from 'axios';
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { getStorageItemAsync } from '@/auth/useStorageState';
 
-const API_URL = 'http://192.168.1.155:8000/api';
+// Surcharge possible sans toucher au code : EXPO_PUBLIC_API_URL=http://... npx expo start
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.155:8000/api';
 
 const api = axios.create({ baseURL: API_URL });
 
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('token');
+  const token = await getStorageItemAsync('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });

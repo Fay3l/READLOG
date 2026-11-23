@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { Screen } from "@/components/screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TitlePage } from "@/components/titlepage";
@@ -98,13 +98,20 @@ export default function Index() {
             </TouchableOpacity>
           </View>
         </View>
-        {Array.isArray(booksStatus) && booksStatus.length > 0 ? (
-          booksStatus.map((userbook) => (
-            <CardBook key={userbook.id} book={userbook} page="/(tabs)" />
-          ))
-        ) : (
-          <Text style={{color: theme.colors.text.secondary,fontWeight: "bold", margin:10}}>Aucun livre pour le moment</Text>
-        )}
+        {/* ✅ ScrollView : sinon les derniers livres restent cachés sous la tab bar */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ gap: 12, paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {booksStatus.length > 0 ? (
+            booksStatus.map((userbook) => (
+              <CardBook key={userbook.id} book={userbook} page="/(tabs)" />
+            ))
+          ) : (
+            <Text style={{ color: theme.colors.text.secondary, fontWeight: "bold", margin: 10 }}>Aucun livre pour le moment</Text>
+          )}
+        </ScrollView>
 
 
       </SafeAreaView>

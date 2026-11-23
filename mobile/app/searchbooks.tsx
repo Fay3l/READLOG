@@ -57,7 +57,7 @@ export default function SearchBooks() {
                         <View style={styles.button}>
                             <TouchableOpacity onPress={searchbooks}>
                                 <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                                    <Search width={22} height={22} stroke={theme.colors.text.secondary} />
+                                    <Search width={22} height={22} color={theme.colors.text.secondary} />
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -65,7 +65,7 @@ export default function SearchBooks() {
                     <View style={styles.button}>
                         <TouchableOpacity onPress={camera}>
                             <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                                <Camera width={22} height={22} stroke={theme.colors.text.secondary} />
+                                <Camera width={22} height={22} color={theme.colors.text.secondary} />
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -80,7 +80,7 @@ export default function SearchBooks() {
                                 <View style={{ marginBottom: 80, marginTop: 10 }}>
                                     {books.map((x: BookResult) => (
                                         <View style={{ margin: 5 }} key={x.google_books_id}>
-                                            <CardBook book={toGetBook(x)} page="/(tabs)/searchbooks" />
+                                            <CardBook book={toGetBook(x)} page="/searchbooks" />
                                         </View>
                                     ))}
                                 </View>

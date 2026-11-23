@@ -60,16 +60,6 @@ export default function TabsLayout() {
             tabBarIcon: () => <User width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Profil" ></TabBarLabel>
         }}></Tabs.Screen>
-        <Tabs.Screen name="bookdetail" options={{
-            headerShown: false,
-            href: null,
-        }}>
-        </Tabs.Screen>
-        <Tabs.Screen name="searchbooks" options={{
-            headerShown: false,
-            href: null,
-        }}>
-        </Tabs.Screen>
     </Tabs>;
 }
 

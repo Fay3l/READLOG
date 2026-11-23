@@ -1,75 +1,81 @@
 import { useTheme } from "@/constants/themecontext";
 import { useMemo } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, View, Text, Pressable, Image } from "react-native";
 import * as Progress from 'react-native-progress'
 import OpenBook from "@/assets/icon/open-book.svg"
 import { TagStatus } from "./tagstatus";
 import { GetBook, useBookStore } from "@/types/books";
 import { router } from "expo-router";
+
 interface CardBookProps {
     readonly book: GetBook
     readonly page: string
 }
 
-export function CardBook(book: CardBookProps) {
+export function CardBook({ book, page }: CardBookProps) {
     const theme = useTheme()
     const styles = useStyles()
-    const title = (title: string) => {
-        return title.slice(0, 20)
-    }
     const setBook = useBookStore(s => s.setBook)
 
+    // Progression seulement pour un livre de la bibliothèque, en cours, avec un nombre de pages connu
+    const showProgress = !!book.id && book.status === "reading" && !!book.page_count
+    const progress = showProgress ? Math.min(book.current_page / book.page_count!, 1) : 0
+
     function handlePress() {
-        const selectedBook = book.book as GetBook
-        setBook(selectedBook)
-        router.push({ pathname: '/bookdetail', params: { page: book.page } })
+        setBook(book)
+        router.push({ pathname: '/bookdetail', params: { page } })
     }
 
     return (
-        <View style={styles.card}>
-            <TouchableOpacity onPress={handlePress}>
-                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                    {book.book.cover_url ?
-                        <Image width={50} height={70} source={{ uri: book.book.cover_url }} ></Image>
-                        :
-                        <View style={styles.card_book}>
-                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                <OpenBook width={25} height={25} />
-                            </View>
-                        </View>
-                    }
-                    <View style={{ flex: 10, gap: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={{ flex: 1 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 5 }}>
-                                    <View style={{ gap: 3 }}>
-                                        <Text style={styles.title_text}>{title(book.book.title)}</Text>
-                                        <Text style={styles.author_text}>{book.book.author}</Text>
-                                        <Text style={styles.category_text}>{'genres' in book.book ? book.book.genres : ''}</Text>
-                                    </View>
-                                    <View>
-                                        {book.book.status ? <TagStatus status={book.book.status} is_active={false} /> : null}
-                                    </View>
-                                </View>
-                            </View>
+        <Pressable
+            onPress={handlePress}
+            style={({ pressed }) => [styles.card, pressed && styles.card_pressed]}
+            accessibilityRole="button"
+            accessibilityLabel={`${book.title}, ${book.author}`}
+        >
+            {/* Couverture */}
+            {book.cover_url ? (
+                <Image source={{ uri: book.cover_url }} style={styles.cover} />
+            ) : (
+                <View style={[styles.cover, styles.cover_placeholder]}>
+                    <OpenBook width={26} height={26} />
+                </View>
+            )}
 
+            {/* Infos : minWidth 0 + flex 1 => le texte se coupe au lieu de pousser le tag hors de la carte */}
+            <View style={styles.infos}>
+                <View style={styles.header}>
+                    <Text style={styles.title} numberOfLines={2}>{book.title}</Text>
+                    {book.status ? (
+                        <View style={styles.tag}>
+                            <TagStatus status={book.status} is_active={false} />
                         </View>
-                        {
-                            book.book.id ? (
-                                <View>
-                                    <Progress.Bar width={null} progress={book.book.page_count ? book.book.current_page / book.book.page_count : 0} color={theme.gradients.progressBar[0]} />
-                                </View>
-                            ) : null
-                        }
-
-                    </View>
-                    <View >
-                        <Text> {'>'} </Text>
-                    </View>
+                    ) : null}
                 </View>
 
-            </TouchableOpacity>
-        </View>
+                <Text style={styles.author} numberOfLines={1}>{book.author}</Text>
+                {book.genres ? <Text style={styles.genre} numberOfLines={1}>{book.genres}</Text> : null}
+
+                {showProgress ? (
+                    <View style={styles.progress_row}>
+                        <View style={{ flex: 1 }}>
+                            <Progress.Bar
+                                width={null}
+                                height={4}
+                                progress={progress}
+                                color={theme.colors.accent.default}
+                                unfilledColor={theme.colors.border.progress}
+                                borderWidth={0}
+                                borderRadius={2}
+                            />
+                        </View>
+                        <Text style={styles.progress_text}>{Math.round(progress * 100)} %</Text>
+                    </View>
+                ) : null}
+            </View>
+
+            <Text style={styles.chevron}>›</Text>
+        </Pressable>
     )
 }
 
@@ -77,34 +83,79 @@ function useStyles() {
     const theme = useTheme()
     return useMemo(() => StyleSheet.create({
         card: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
             backgroundColor: theme.colors.bg.card,
             borderRadius: theme.radius.lg,
             borderWidth: 1,
-            borderColor: theme.colors.accent.ghost,
-            paddingHorizontal: 10,
-            paddingVertical: 20
+            borderColor: theme.colors.border.card,
+            padding: 12,
         },
-        card_book: {
-            flex: 3,
-            backgroundColor: theme.colors.status.finished,
+        card_pressed: {
             opacity: 0.85,
-            borderRadius: theme.radius.lg,
-            height: '100%',
+            transform: [{ scale: 0.99 }],
         },
-        title_text: {
+        cover: {
+            width: 56,
+            height: 84,
+            borderRadius: theme.radius.sm,
+        },
+        cover_placeholder: {
+            backgroundColor: theme.colors.accent.ghost,
+            borderWidth: 1,
+            borderColor: theme.colors.accent.tint,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        infos: {
+            flex: 1,
+            minWidth: 0,
+            gap: 4,
+        },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 8,
+        },
+        title: {
+            flex: 1,
             fontFamily: theme.fonts.playfair.bold,
-            fontSize: theme.fontSizes.lg,
-            color: theme.colors.text.primary
-        },
-        author_text: {
-            fontFamily: theme.fonts.dmSans.regular,
             fontSize: theme.fontSizes.md,
-            color: theme.colors.text.hint
+            lineHeight: theme.fontSizes.md * 1.25,
+            color: theme.colors.text.primary,
         },
-        category_text: {
+        tag: {
+            flexShrink: 0, // le tag garde toujours sa taille
+            marginTop: 1,
+        },
+        author: {
             fontFamily: theme.fonts.dmSans.regular,
             fontSize: theme.fontSizes.sm,
-            color: theme.colors.text.muted
-        }
+            color: theme.colors.text.secondary,
+        },
+        genre: {
+            fontFamily: theme.fonts.dmSans.regular,
+            fontSize: theme.fontSizes.xs,
+            color: theme.colors.text.label,
+        },
+        progress_row: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 6,
+        },
+        progress_text: {
+            fontFamily: theme.fonts.dmSans.medium,
+            fontSize: theme.fontSizes.xs,
+            color: theme.colors.accent.default,
+            minWidth: 34,
+            textAlign: 'right',
+        },
+        chevron: {
+            fontSize: 26,
+            color: theme.colors.text.hint,
+            marginLeft: -4,
+        },
     }), [theme])
 }
