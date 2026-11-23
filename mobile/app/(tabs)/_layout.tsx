@@ -28,13 +28,15 @@ export default function TabsLayout() {
         tabBarStyle: {
             backgroundColor: theme.colors.bg.nav,
             borderTopColor: theme.colors.border.inactive,
-            borderTopWidth: 0.5,
+            borderRadius:theme.radius.xl,
+            margin:20,
             position: 'absolute',
         },
     }}>
         <Tabs.Screen name="index" options={{
             headerShown: false,
             animation:"shift",
+            headerStyle: {margin:10},
             tabBarIcon: () => <Books width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Bibliothèque" ></TabBarLabel>
         }}></Tabs.Screen>
