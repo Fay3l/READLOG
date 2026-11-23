@@ -28,37 +28,45 @@ export default function TabsLayout() {
         tabBarStyle: {
             backgroundColor: theme.colors.bg.nav,
             borderTopColor: theme.colors.border.inactive,
-            borderRadius:theme.radius.xl,
-            margin:20,
+            borderRadius: theme.radius.xl,
+            marginBottom:30,
+            marginLeft:20,
+            marginRight:20,
+            paddingTop:5,
+            paddingBottom:5,
+            flex:1,
+            height:65,
+            alignItems:'center',
+            justifyContent:'center',
             position: 'absolute',
         },
     }}>
         <Tabs.Screen name="index" options={{
             headerShown: false,
-            animation:"shift",
-            headerStyle: {margin:10},
+            animation: "shift",
+            headerStyle: { margin: 10 },
             tabBarIcon: () => <Books width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Bibliothèque" ></TabBarLabel>
         }}></Tabs.Screen>
         <Tabs.Screen name="stats" options={{
             headerShown: false,
-            animation:"shift",
+            animation: "shift",
             tabBarIcon: () => <BarChart width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Statistiques" ></TabBarLabel>
         }}></Tabs.Screen>
         <Tabs.Screen name="profile" options={{
             headerShown: false,
-            animation:"shift",
+            animation: "shift",
             tabBarIcon: () => <User width={23} height={23} />,
             tabBarLabel: ({ focused }) => <TabBarLabel focused={focused} name="Profil" ></TabBarLabel>
         }}></Tabs.Screen>
-        <Tabs.Screen name="bookdetail"  options={{
-            headerShown:false,
+        <Tabs.Screen name="bookdetail" options={{
+            headerShown: false,
             href: null,
         }}>
         </Tabs.Screen>
-        <Tabs.Screen name="searchbooks"  options={{
-            headerShown:false,
+        <Tabs.Screen name="searchbooks" options={{
+            headerShown: false,
             href: null,
         }}>
         </Tabs.Screen>
