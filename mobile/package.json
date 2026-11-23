@@ -20,7 +20,6 @@
     "@react-navigation/native": "^7.1.8",
     "axios": "^1.16.0",
     "expo": "~58.0.26",
-    "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "~58.0.14",
     "expo-constants": "~58.0.16",
     "expo-font": "~58.0.12",

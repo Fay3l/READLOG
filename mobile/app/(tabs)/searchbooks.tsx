@@ -1,7 +1,7 @@
 import { Screen } from "@/components/screen";
 import { useTheme } from "@/constants/themecontext";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Camera from "@/assets/icon/camera.svg"
 import Search from "@/assets/icon/search.svg"
@@ -18,6 +18,8 @@ export default function SearchBooks() {
     const [isFocused, setIsFocused] = useState(false)
     const [loading, setLoading] = useState(false)
     const searchbooks = async () => {
+        if (search.trim().length < 2) return // le backend exige min 2 caractères (sinon 422)
+        Keyboard.dismiss()
         setLoading(true)
         const res = await search_books(search)
         if (res) {
@@ -32,13 +34,23 @@ export default function SearchBooks() {
 
     return (
         <Screen>
-            <SafeAreaView style={{ margin: 20 }}>
+            <SafeAreaView style={{ flex: 1, margin: 20 }}>
                 <Text style={[{ margin: 5 }, styles.title]}>Recherche</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
                     <View style={{ flex: 1 }}>
                         <View style={[{ alignItems: 'center', flexDirection: 'row' }, styles.text_input, isFocused && styles.text_input_focus]}>
-                            <TextInput style={{ flex: 1 }} value={search} onChangeText={setSearch} autoFocus >
-                            </TextInput>
+                            <TextInput
+                                style={styles.input}
+                                value={search}
+                                onChangeText={setSearch}
+                                onFocus={() => setIsFocused(true)}
+                                onBlur={() => setIsFocused(false)}
+                                onSubmitEditing={searchbooks}
+                                returnKeyType="search"
+                                placeholder="Titre, auteur ou ISBN"
+                                placeholderTextColor={theme.colors.text.muted}
+                                autoFocus
+                            />
                         </View>
                     </View>
                     <View>
@@ -58,14 +70,14 @@ export default function SearchBooks() {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{ marginTop: 5 }}>{
+                <View style={{ flex: 1, marginTop: 5 }}>{
                     loading ?
                         <View style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
                             <Text style={styles.title}>Chargement...</Text>
                         </View>
                         : (
-                            <ScrollView style={{}}>
-                                <View style={{marginBottom:210,marginTop:10}}>
+                            <ScrollView keyboardShouldPersistTaps="handled">
+                                <View style={{ marginBottom: 80, marginTop: 10 }}>
                                     {books.map((x: BookResult) => (
                                         <View style={{ margin: 5 }} key={x.google_books_id}>
                                             <CardBook book={toGetBook(x)} page="/(tabs)/searchbooks" />
@@ -110,6 +122,13 @@ function useStyles() {
             borderColor: theme.colors.border.card,
             fontFamily: theme.fonts.dmSans.regular,
             color: theme.colors.text.primary
+        },
+        input: {
+            flex: 1,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            fontFamily: theme.fonts.dmSans.regular,
+            color: theme.colors.text.primary,
         },
         text_input_focus: {
             borderColor: theme.colors.border.focus,

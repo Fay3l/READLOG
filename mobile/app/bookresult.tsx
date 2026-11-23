@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AppTheme } from "@/constants/theme";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { router } from "expo-router";
 import { useTheme } from "@/constants/themecontext";
 import Book from "@/assets/icon/book.svg"
@@ -14,17 +14,20 @@ export default function BookResult() {
     const styles = useStyles(theme)
     const {show} = useToast()
     const book = useBookResultStore((s) => s.scannedBook)
-    if (!book) { router.back(); return null; }
+    // ✅ pas de navigation pendant le rendu : on le fait dans un effet
+    useEffect(() => {
+        if (!book) router.back()
+    }, [book])
+    if (!book) return null;
     const addBook = async() => {
-        try{
-            await add_userbook(book)
+        // add_userbook ne lève jamais d'erreur : il renvoie { ok, message }
+        const res = await add_userbook(book)
+        if (res.ok) {
             show("Livre ajouté","success")
-            router.push('/(tabs)')
+            router.replace('/(tabs)')
+        } else {
+            show(res.message ?? "Livre pas ajouté",'error')
         }
-        catch(err: any){
-            show(`Erreur: ${err}`,'error')
-        }
-        
     }
     const camera = () => {
         router.push('/camera')

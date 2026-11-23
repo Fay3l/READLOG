@@ -21,6 +21,8 @@ export default function TabsLayout() {
     }
 
     return <Tabs screenOptions={{
+        // ✅ "shift" fait un fondu : sans fond, on voit le noir derrière l'écran
+        sceneStyle: { backgroundColor: theme.colors.bg.primary },
         tabBarActiveTintColor: theme.colors.accent.default,
         tabBarInactiveTintColor: theme.colors.text.muted,
         tabBarStyle: {
