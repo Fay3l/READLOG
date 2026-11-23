@@ -1,41 +1,47 @@
-from requests import Session
+from datetime import datetime, timezone
+
+from sqlalchemy.orm import Session
+
 from app.models.books import Books
 from app.models.user_books import UserBooks
-from app.models.users import Users
-from app.schemas.user import UserStats
+from app.schemas.user import GetUser, UserStats
 
 
-async def get_user_stats(user: Users, db: Session):
-    # Récupérer le nombre total de livres
-    total_books = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id).count()
+async def get_user_stats(user: GetUser, db: Session, year: int | None = None) -> UserStats:
+    """Statistiques de lecture d'un utilisateur pour une année donnée (par défaut : l'année en cours)."""
+    year = year or datetime.now(timezone.utc).year
 
-    # Récupérer le nombre de livres lus
-    reading_books = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id, UserBooks.status == "reading").count()
+    rows = (
+        db.query(UserBooks.status, UserBooks.current_page, UserBooks.finished_at, Books.page_count)
+        .join(Books, Books.id == UserBooks.book_id)
+        .filter(UserBooks.user_id == user.id)
+        .all()
+    )
 
-    finished_books = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id, UserBooks.status == "finished").count()
+    counts = {"reading": 0, "finished": 0, "to_read": 0}
+    books_per_month = [0] * 12
+    pages_read = 0
 
-    # Récupérer le nombre de livres à lire
-    to_read_books = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id, UserBooks.status == "to_read").count()
+    for status, current_page, finished_at, page_count in rows:
+        if status in counts:
+            counts[status] += 1
 
-    page_reads = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id).with_entities(UserBooks.current_page).all()
-    page_reads = sum([p[0] for p in page_reads if p[0] is not None])
-
-    reading_goals = db.query(Users).filter(Users.id == user.id).first().reading_goals
-
-    reading_weeks = db.query(UserBooks).filter(
-        UserBooks.user_id == user.id, UserBooks.status == "reading").with_entities(UserBooks.start_date, UserBooks.end_date).all()
+        if status == "finished":
+            # un livre terminé compte pour toutes ses pages, même si current_page n'a pas été mis à jour
+            pages_read += max(current_page or 0, page_count or 0)
+            if finished_at is not None and finished_at.year == year:
+                books_per_month[finished_at.month - 1] += 1
+        else:
+            pages_read += current_page or 0
 
     return UserStats(
-        total_books=total_books,
-        reading_books=reading_books,
-        finished_books=finished_books,
-        to_read_books=to_read_books,
-        page_reads=page_reads,
-        reading_goals=reading_goals,
-        reading_weeks=len([1 for start, end in reading_weeks if start is not None and end is not None])
+        year=year,
+        total_books=len(rows),
+        reading_books=counts["reading"],
+        finished_books=counts["finished"],
+        to_read_books=counts["to_read"],
+        pages_read=pages_read,
+        reading_goal=user.reading_goal,
+        finished_this_year=sum(books_per_month),
+        books_per_month=books_per_month,
     )
