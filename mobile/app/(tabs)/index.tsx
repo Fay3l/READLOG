@@ -10,6 +10,7 @@ import { CardBook } from "@/components/cardbook";
 import { AnimateBook } from "@/components/animatebook";
 import { GetBook, useUserBookStore } from "@/types/books";
 import { useUserStore } from "@/types/users";
+import { TAB_BAR_SPACE } from "@/constants/layout";
 
 
 function getGreeting(): string {
@@ -101,7 +102,7 @@ export default function Index() {
         {/* ✅ ScrollView : sinon les derniers livres restent cachés sous la tab bar */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ gap: 12, paddingBottom: 120 }}
+          contentContainerStyle={{ gap: 12, paddingBottom: TAB_BAR_SPACE }}
           showsVerticalScrollIndicator={false}
         >
           {booksStatus.length > 0 ? (

@@ -1,8 +1,7 @@
-from sqlalchemy.orm import Session
+from requests import Session
 from app.models.books import Books
 from app.models.user_books import UserBooks
-from app.models.users import Users
-from app.schemas.user import UserStats
+from app.schemas.user import GetUser, UserStats
 
 
 async def get_user_stats(user: Users, db: Session):
@@ -25,17 +24,19 @@ async def get_user_stats(user: Users, db: Session):
         UserBooks.user_id == user.id).with_entities(UserBooks.current_page).all()
     page_reads = sum([p[0] for p in page_reads if p[0] is not None])
 
-    reading_goals = db.query(Users).filter(Users.id == user.id).first().reading_goal
+    reading_goals = db.query(Users).filter(Users.id == user.id).first().reading_goals
 
     reading_weeks = db.query(UserBooks).filter(
         UserBooks.user_id == user.id, UserBooks.status == "reading").with_entities(UserBooks.start_date, UserBooks.end_date).all()
 
     return UserStats(
-        total_books=total_books,
-        reading_books=reading_books,
-        finished_books=finished_books,
-        to_read_books=to_read_books,
-        page_reads=page_reads,
-        reading_goals=reading_goals,
-        reading_weeks=len([1 for start, end in reading_weeks if start is not None and end is not None])
+        year=year,
+        total_books=len(rows),
+        reading_books=counts["reading"],
+        finished_books=counts["finished"],
+        to_read_books=counts["to_read"],
+        pages_read=pages_read,
+        reading_goal=user.reading_goal,
+        finished_this_year=sum(books_per_month),
+        books_per_month=books_per_month,
     )

@@ -6,9 +6,10 @@ from app.models.reading_reminders import ReadingReminders
 from app.repositories.readingreminders import create_reading_reminders
 from ..database.session import get_db
 from app.routers.auth import get_current_user, require_verified_email
-from app.schemas.user import GetUser, OnboardingSchema
+from app.schemas.user import GetUser, OnboardingSchema, UpdateUserBook, UserStats
+from app.repositories.stats import get_user_stats
 from sqlalchemy.orm import Session
-from app.repositories.books import  get_books, remove_user_book
+from app.repositories.books import get_books, remove_user_book, update_user_book
 from uuid import uuid4
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -28,6 +29,16 @@ async def read_user_me(current_user: Annotated[GetUser, Depends(get_current_user
     if not current_user:
         raise credentials_exception
     return current_user
+
+
+# ⚠️ Doit être déclarée AVANT "/{username}" (même raison que /books)
+@router.get("/stats", response_model=UserStats)
+async def read_stats(
+    year: int | None = None,
+    current_user: GetUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return await get_user_stats(current_user, db, year)
 
 
 # ⚠️ Doit être déclarée AVANT "/{username}", sinon "/books" est capturé
@@ -65,3 +76,17 @@ async def delete_book(
         raise HTTPException(status_code=404, detail="Livre non trouvé dans la bibliothèque de l'utilisateur")
     
     return {"detail": "Livre supprimé de la bibliothèque de l'utilisateur et éventuellement de la base de données."}
+
+
+@router.patch("/book/{book_id}")
+async def patch_book(
+    book_id: str,
+    data: UpdateUserBook,
+    current_user: Annotated[GetUser, Depends(require_verified_email)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    user_book = await update_user_book(db=db, b_id=book_id, u_id=str(current_user.id),
+                                       status=data.status, current_page=data.current_page)
+    if user_book is None:
+        raise HTTPException(status_code=404, detail="Livre non trouvé dans la bibliothèque de l'utilisateur")
+    return {"status": user_book.status, "current_page": user_book.current_page}

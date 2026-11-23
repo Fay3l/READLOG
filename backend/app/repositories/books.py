@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import HTTPException
 from uuid import uuid4,UUID
 from sqlalchemy.orm import Session
@@ -70,3 +71,30 @@ async def remove_user_book(db:Session, b_id:str, u_id:str):
         return False
     db.commit()
     return True
+
+
+async def update_user_book(db: Session, b_id: str, u_id: str, status: str | None, current_page: int | None):
+    """Met à jour le statut et/ou la page en cours d'un livre de la bibliothèque."""
+    user_book = db.query(UserBooks).filter(
+        UserBooks.book_id == UUID(b_id), UserBooks.user_id == UUID(u_id)
+    ).first()
+    if user_book is None:
+        return None
+
+    now = datetime.now(timezone.utc)
+    if status is not None and status != user_book.status:
+        user_book.status = status
+        if status == "reading" and user_book.started_at is None:
+            user_book.started_at = now
+        # finished_at sert aux stats "livres lus par mois"
+        user_book.finished_at = now if status == "finished" else None
+
+    if current_page is not None:
+        book = db.query(Books).filter(Books.id == user_book.book_id).first()
+        if book and book.page_count:
+            current_page = min(current_page, book.page_count)
+        user_book.current_page = current_page
+
+    db.commit()
+    db.refresh(user_book)
+    return user_book
