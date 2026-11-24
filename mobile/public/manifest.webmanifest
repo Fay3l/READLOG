@@ -1,0 +1,17 @@
+{
+  "name": "ReadLog — Suivi de lectures",
+  "short_name": "ReadLog",
+  "description": "Suis tes lectures, scanne tes livres et atteins ton objectif annuel.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#13100C",
+  "theme_color": "#13100C",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

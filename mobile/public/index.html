@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover : l'app utilise toute la surface de l'écran de l'iPhone (encoche comprise) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>ReadLog</title>
+    <meta name="description" content="Suis tes lectures, scanne tes livres et atteins ton objectif annuel." />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#13100C" />
+
+    <!-- iOS : Safari ne lit pas le manifeste pour tout, il lui faut ces balises -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ReadLog" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <style id="expo-reset">
+      html, body { height: 100%; }
+      body { overflow: hidden; background-color: #13100C; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
+  </head>
+  <body>
+    <noscript>ReadLog a besoin de JavaScript pour fonctionner.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

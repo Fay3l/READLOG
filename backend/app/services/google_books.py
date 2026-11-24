@@ -42,12 +42,9 @@ def _parse_item(item: dict) -> BookResult | None:
 
 async def search_books(query: str, max_results: int = 10, retries: int = 2) -> list[BookResult]:
     """Recherche texte libre ou ISBN, avec retry sur erreurs 5xx"""
-    params = {
-        "q": query,
-        "maxResults": max_results,
-        "printType": "books",
-        "key": API_KEY,
-    }
+    params = {"q": query, "maxResults": max_results, "printType": "books"}
+    if API_KEY:  # sans clé, Google autorise quelques requêtes anonymes (quota partagé, vite épuisé)
+        params["key"] = API_KEY
 
     last_error = None
     for attempt in range(retries + 1):
@@ -76,7 +73,7 @@ async def get_book_by_id(google_books_id: str) -> BookResult | None:
     """Récupérer un seul livre par ID"""
     url = f"{GOOGLE_BOOKS_URL}/{google_books_id}"
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params={"key": API_KEY}, timeout=5.0)
+        response = await client.get(url, params={"key": API_KEY} if API_KEY else None, timeout=5.0)
         if response.status_code == 404:
             return None
         response.raise_for_status()

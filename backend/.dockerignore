@@ -1,0 +1,11 @@
+# Tout ce qui ne doit PAS entrer dans l'image (plus légère, et jamais de secrets)
+.venv
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+tests
+*.db

@@ -13,8 +13,8 @@
   <img src="DOCS/screenshots/statistiques.png" width="200" alt="Statistiques" />
 </p>
 
-<!-- Une fois l'app en ligne (voir DOCS/DEPLOY.md), remplace par tes liens :
-**Essayer :** [📱 Télécharger l'APK Android](https://expo.dev/...) · [🌐 Version web](https://readlog.expo.app)
+<!-- Une fois l'app en ligne (voir DOCS/DEPLOY-K3S.md), remplace par ton domaine :
+**Essayer :** [🌐 Version web / iPhone](https://readlog.ton-domaine.fr) · [📱 APK Android](https://github.com/Fay3l/READLOG/releases/latest/download/readlog.apk)
 -->
 
 ---
@@ -22,6 +22,8 @@
 ## Fonctionnalités
 
 - **Ajout de livres** : scan du code-barres (ISBN) avec la caméra, ou recherche par titre / auteur, via l'API Google Books
+- **Livres introuvables** : saisie manuelle ; le livre rejoint la base ReadLog et devient trouvable par tous
+- **Version web installable (PWA)** : sur iPhone, Android ou ordinateur, avec un bandeau qui guide l'installation
 - **Suivi de lecture** : statut (À lire · En cours · Terminé), page actuelle et pourcentage ; un livre passe en « Terminé » à la dernière page
 - **Statistiques** : objectif annuel, livres lus / en cours / à lire, pages lues, histogramme des livres terminés par mois
 - **Profil** : badges, objectif, rappel de lecture, thème Auto / Clair / Sombre mémorisé
@@ -37,7 +39,7 @@
 | Authentification | JWT (PyJWT) · mots de passe hachés en Argon2 |
 | API externe | Google Books |
 | Qualité | pytest · ruff · TypeScript strict · ESLint · GitHub Actions |
-| Déploiement | Render (API) · Neon (Postgres) · EAS Build & Hosting (app) |
+| Déploiement | Docker · k3s (Kubernetes) · Traefik · cert-manager · GitHub Actions (CI/CD) · GHCR |
 
 ## Architecture
 
@@ -63,6 +65,8 @@ READLOG/
 │   ├── fetch/                appels à l'API
 │   └── constants/            thème (couleurs, polices, espacements)
 │
+├── deploy/k8s/               manifests Kubernetes (bootstrap admin + application)
+├── .github/workflows/        CI (tests, lint), CD (build + déploiement k3s), release de l'APK
 └── DOCS/                     déploiement, journal de débogage, schéma de la base
 ```
 
@@ -76,10 +80,11 @@ Prérequis : Python 3.11+, [uv](https://docs.astral.sh/uv/), PostgreSQL.
 cd backend
 uv sync                              # installe les dépendances
 cp .env.example .env                 # puis remplis DATABASE_URL et SECRET_KEY
+uv run python -m app.migrate         # crée / met à jour le schéma de la base
 uv run uvicorn app.main:app --reload
 ```
 
-API sur `http://localhost:8000`, documentation interactive sur `http://localhost:8000/docs`.
+API sur `http://localhost:8000`, documentation interactive sur `http://localhost:8000/api/docs`.
 Sans SMTP configuré, le code de vérification reçu à l'inscription s'affiche dans les logs du serveur.
 
 ### Mobile
@@ -98,7 +103,7 @@ Scanne le QR code avec **Expo Go** (le téléphone et le PC doivent être sur le
 
 ```bash
 # backend
-uv run pytest            # 28 tests, dont les parcours d'authentification complets
+uv run pytest            # 35 tests, dont les parcours d'authentification complets
 uv run ruff check app tests && uv run ruff format --check app tests
 
 # mobile
@@ -133,14 +138,16 @@ DELETE /api/users/book/{id}        Retirer un livre
 GET    /api/users/stats            Statistiques de l'année
 PATCH  /api/users/onboarding       Objectif, genres, rappel
 
-GET    /api/books/search?q=        Recherche Google Books
-POST   /api/books/add              Ajouter un livre
+GET    /api/books/search?q=        Recherche (base ReadLog + Google Books)
+POST   /api/books/add              Ajouter un livre (Google Books)
+POST   /api/books/manual           Ajouter un livre saisi à la main
 GET    /health                     État du service
 ```
 
 ## Déploiement
 
-Voir **[DOCS/DEPLOY.md](DOCS/DEPLOY.md)** : base Neon, API sur Render, APK Android et version web avec EAS, gratuitement.
+- **[DOCS/DEPLOY-K3S.md](DOCS/DEPLOY-K3S.md)** : tout sur un VPS avec k3s (Postgres, API, PWA sous un seul domaine), déploiement automatique à chaque push sur `main`, APK publié dans les Releases GitHub.
+- [DOCS/DEPLOY.md](DOCS/DEPLOY.md) : alternative 100 % gratuite sans serveur (Neon, Render, EAS).
 
 ## Roadmap
 

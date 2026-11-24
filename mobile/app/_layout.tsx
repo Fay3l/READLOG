@@ -6,6 +6,8 @@ import { NavigationBar } from 'expo-navigation-bar';
 import { ToastProvider } from '@/components/toast/toast_context';
 import { Toast } from '@/components/toast/toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { WebFrame } from '@/components/webframe';
+import { InstallBanner } from '@/components/installbanner';
 import { useEffect } from 'react';
 import * as SystemUI from 'expo-system-ui';
 // ⚠️ SDK 58 : expo-router embarque sa propre copie de React Navigation,
@@ -34,10 +36,14 @@ export default function Root() {
       {/* ✅ ThemeProvider doit ENGLOBER RootNavigator, sinon useThemeContext()
           dans RootNavigator lit la valeur par défaut du contexte */}
       <ThemeProvider>
-        <ToastProvider>
-          <RootNavigator />
-          <Toast />
-        </ToastProvider>
+        {/* WebFrame / InstallBanner : actifs seulement sur la version web (fichiers .web.tsx) */}
+        <WebFrame>
+          <ToastProvider>
+            <RootNavigator />
+            <Toast />
+          </ToastProvider>
+          <InstallBanner />
+        </WebFrame>
       </ThemeProvider>
     </SessionProvider>
   );
@@ -127,6 +133,7 @@ function RootNavigator() {
         <Stack.Protected guard={!!session}>
           <Stack.Screen name='searchbooks' options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name='bookdetail' options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name='addbook' options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!!session}>

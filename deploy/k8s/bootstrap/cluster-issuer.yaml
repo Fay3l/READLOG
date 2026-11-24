@@ -1,0 +1,42 @@
+# ClusterIssuer : explique à cert-manager comment obtenir des certificats HTTPS gratuits
+# auprès de Let's Encrypt. "Cluster" = utilisable par tous les namespaces.
+#
+# Seule information à fournir : ton e-mail (Let's Encrypt t'écrit si un certificat va expirer).
+# Remplace ${ACME_EMAIL} ou applique avec :
+#   ACME_EMAIL=toi@exemple.fr envsubst < cluster-issuer.yaml | kubectl apply -f -
+#
+# Deux émetteurs :
+#  - letsencrypt-staging : pour tester (certificats non reconnus par les navigateurs, mais
+#    pas de limite stricte). Utile tant que la config n'est pas validée.
+#  - letsencrypt-prod    : les vrais certificats (limite : 5 échecs/heure par domaine).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: ${ACME_EMAIL}
+    privateKeySecretRef:
+      name: letsencrypt-staging-account
+    solvers:
+      # HTTP-01 : Let's Encrypt vérifie que tu contrôles le domaine en appelant
+      # http://ton-domaine/.well-known/acme-challenge/... servi par Traefik
+      - http01:
+          ingress:
+            ingressClassName: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ${ACME_EMAIL}
+    privateKeySecretRef:
+      name: letsencrypt-prod-account
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: traefik

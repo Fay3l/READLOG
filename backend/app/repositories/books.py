@@ -1,12 +1,14 @@
+import re
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.books import Books
 from app.models.user_books import UserBooks
-from app.schemas.book import GetBook
+from app.schemas.book import BookCreate, BookResult, GetBook
 from app.schemas.user import GetUser
 from app.services.google_books import get_book_by_id
 
@@ -27,7 +29,16 @@ async def create_book(db: Session, current_user: GetUser, google_books_id: str, 
         raise HTTPException(status_code=409, detail="Déjà dans ta bibliothèque")
 
     # 4. Création de l'entrée user_book
-    user_book = UserBooks(id=uuid4(), user_id=current_user.id, book_id=book.id, status=status)
+    now = datetime.now(UTC)
+    user_book = UserBooks(
+        id=uuid4(),
+        user_id=current_user.id,
+        book_id=book.id,
+        status=status,
+        # les dates alimentent les stats ("livres lus par mois")
+        started_at=now if status in ("reading", "finished") else None,
+        finished_at=now if status == "finished" else None,
+    )
     db.add(user_book)
     db.commit()
     return {"message": "Livre ajouté ✅", "book_id": book.id}
@@ -97,3 +108,66 @@ async def update_user_book(db: Session, b_id: str, u_id: str, status: str | None
     db.commit()
     db.refresh(user_book)
     return user_book
+
+
+# Les livres saisis à la main n'ont pas d'identifiant Google : on leur en donne un local,
+# ce qui permet de réutiliser tel quel tout le reste du code (ajout, bibliothèque, stats).
+LOCAL_PREFIX = "local-"
+
+
+def _to_result(book: Books) -> BookResult:
+    return BookResult(
+        google_books_id=book.google_books_id,
+        title=book.title,
+        author=book.author,
+        cover_url=book.cover_url,
+        description=book.description,
+        page_count=book.page_count,
+        isbn=book.isbn,
+        published_year=book.published_year,
+        publisher=book.publisher,
+        genre=book.genres,
+    )
+
+
+def _escape_like(text: str) -> str:
+    # % et _ sont des jokers en SQL LIKE : on les échappe pour chercher le texte tel quel
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def search_local_books(db: Session, query: str, limit: int = 10) -> list[BookResult]:
+    """Recherche dans la table books : livres saisis à la main ET livres Google déjà ajoutés."""
+    digits = re.sub(r"[^0-9Xx]", "", query)
+    if query.replace("-", "").replace(" ", "").isdigit() and len(digits) in (10, 13):
+        books = db.query(Books).filter(Books.isbn == digits.upper()).limit(limit).all()
+    else:
+        pattern = f"%{_escape_like(query.strip())}%"
+        books = (
+            db.query(Books)
+            .filter(or_(Books.title.ilike(pattern, escape="\\"), Books.author.ilike(pattern, escape="\\")))
+            .order_by(Books.title)
+            .limit(limit)
+            .all()
+        )
+    return [_to_result(b) for b in books]
+
+
+async def create_manual_book(db: Session, current_user: GetUser, data: BookCreate):
+    """Crée un livre saisi à la main (ou réutilise celui qui a le même ISBN) et l'ajoute à la bibliothèque."""
+    book = db.query(Books).filter(Books.isbn == data.isbn).first() if data.isbn else None
+    if book is None:
+        book = Books(
+            id=uuid4(),
+            google_books_id=f"{LOCAL_PREFIX}{uuid4().hex}",
+            title=data.title,
+            author=data.author,
+            isbn=data.isbn,
+            page_count=data.page_count,
+            published_year=data.published_year,
+            publisher=data.publisher,
+            genres=data.genre,
+            description=data.description,
+        )
+        db.add(book)
+        db.flush()
+    return await create_book(db, current_user, book.google_books_id, data.status)

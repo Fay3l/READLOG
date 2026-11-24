@@ -1,0 +1,56 @@
+# Compte utilisé par GitHub Actions pour déployer.
+# Principe du moindre privilège : il ne peut agir QUE dans le namespace "readlog",
+# et ne peut ni lire ni modifier les Secrets (mots de passe, clés).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: readlog-deployer
+  namespace: readlog
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: readlog-deployer
+  namespace: readlog
+rules:
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io", "traefik.io"]
+    resources:
+      - services
+      - configmaps
+      - persistentvolumeclaims
+      - deployments
+      - statefulsets
+      - cronjobs
+      - jobs
+      - ingresses
+      - networkpolicies
+      - middlewares
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  # lecture seule, pour suivre le déploiement (kubectl rollout status, logs en cas d'échec)
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "pods/log", "replicasets", "events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: readlog-deployer
+  namespace: readlog
+subjects:
+  - kind: ServiceAccount
+    name: readlog-deployer
+    namespace: readlog
+roleRef:
+  kind: Role
+  name: readlog-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Jeton longue durée du compte (Kubernetes le génère et le stocke dans ce Secret)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: readlog-deployer-token
+  namespace: readlog
+  annotations:
+    kubernetes.io/service-account.name: readlog-deployer
+type: kubernetes.io/service-account-token

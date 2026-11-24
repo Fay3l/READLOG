@@ -6,7 +6,13 @@ from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.core.rate_limit import login_limiter, resend_limiter, signup_limiter, verify_limiter
-from app.core.security import create_access_token, decode_access_token, hash_password, verify_password
+from app.core.security import (
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    needs_rehash,
+    verify_password,
+)
 from app.database.session import get_db
 from app.repositories.users import (
     account_exists,
@@ -56,6 +62,10 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
     # On ne parle de l'e-mail non vérifié qu'APRÈS avoir validé le mot de passe
     if not user.email_verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email non vérifié")
+    # Seul moment où l'on connaît le mot de passe en clair : on en profite pour mettre le hash à jour
+    if needs_rehash(user.password_hash):
+        user.password_hash = hash_password(form.password)
+        db.commit()
     return Token(access_token=create_access_token(str(user.id)))
 
 

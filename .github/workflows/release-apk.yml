@@ -1,0 +1,62 @@
+# Construit l'APK Android et le publie dans une "Release" GitHub.
+# Lien de téléchargement stable, qui pointe toujours vers la dernière version :
+#   https://github.com/<toi>/READLOG/releases/latest/download/readlog.apk
+#
+# Lancement manuel : onglet Actions → "Release APK" → Run workflow.
+# Prérequis (une fois) : `eas init` dans mobile/ et le secret EXPO_TOKEN (voir DOCS/DEPLOY-K3S.md).
+name: Release APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # créer la release
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      # Le build Android a besoin de Java 17 (le SDK Android est déjà installé sur les runners GitHub)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: URL de l'API dans le profil "preview"
+        run: |
+          jq --arg url "https://${{ vars.READLOG_DOMAIN }}/api" \
+            '.build.preview.env.EXPO_PUBLIC_API_URL = $url' eas.json > eas.tmp && mv eas.tmp eas.json
+
+      # --local : compile sur le runner GitHub (gratuit, pas de file d'attente EAS).
+      # La clé de signature Android reste gérée par EAS : la même pour chaque version,
+      # ce qui permet d'installer une mise à jour par-dessus l'ancienne.
+      - name: Build APK
+        run: eas build --platform android --profile preview --local --non-interactive --output ../readlog.apk
+
+      - name: Publier la release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="apk-$(date +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" readlog.apk \
+            --title "ReadLog Android ${tag#apk-}" \
+            --notes "APK Android de ReadLog. Installation : ouvrir le fichier sur le téléphone et autoriser l'installation depuis cette source." \
+            --latest
