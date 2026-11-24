@@ -123,3 +123,24 @@ def test_postgres_url_is_normalized():
 
 def test_health(client):
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_old_argon2_hash_is_upgraded_on_login(client, caplog):
+    from argon2 import PasswordHasher
+
+    from app.core.security import needs_rehash
+    from app.models.users import Users
+    from tests.conftest import TestingSessionLocal
+
+    _, email, code = _signup(client, caplog)
+    client.post("/api/verify-email", params={"email": email, "code": code})
+    # simule un compte créé avec les anciens paramètres (64 Mio)
+    old_hash = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=2).hash(PASSWORD)
+    with TestingSessionLocal() as db:
+        db.query(Users).filter(Users.email == email).update({"password_hash": old_hash})
+        db.commit()
+
+    assert _login(client, email).status_code == 200  # l'ancien hash est toujours accepté
+    with TestingSessionLocal() as db:
+        new_hash = db.query(Users).filter(Users.email == email).one().password_hash
+    assert new_hash != old_hash and not needs_rehash(new_hash)

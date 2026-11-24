@@ -1,0 +1,16 @@
+# Kustomize : rassemble tous les manifests de l'application.
+# Rendu par le workflow de déploiement :
+#   kubectl kustomize deploy/k8s/app | envsubst '${DOMAIN} ${API_IMAGE} ${WEB_IMAGE}'
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: readlog
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: readlog
+resources:
+  - postgres.yaml
+  - network-policy.yaml
+  - api.yaml
+  - web.yaml
+  - ingress.yaml
+  - backup.yaml

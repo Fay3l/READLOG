@@ -1,4 +1,6 @@
-# 🚀 Mettre ReadLog en ligne
+# 🚀 Mettre ReadLog en ligne — sans serveur
+
+> Tu as un VPS ? Le guide principal est **[DEPLOY-K3S.md](DEPLOY-K3S.md)** (tout sur ton serveur, déploiement automatique). Celui-ci est l'alternative 100 % gratuite, sans serveur à gérer.
 
 Ce guide met en ligne les trois briques du projet, **gratuitement** :
 
@@ -41,12 +43,8 @@ Le fichier [`render.yaml`](../render.yaml) décrit déjà le service.
    | `MAIL_*` | les valeurs Brevo |
 
    `SECRET_KEY` est générée automatiquement par Render.
-3. Au premier démarrage, l'API crée les tables. Marque ensuite les migrations Alembic comme appliquées, une seule fois (onglet *Shell* du service) :
-   ```bash
-   alembic stamp head
-   ```
-   Pour les migrations suivantes : `alembic upgrade head`.
-4. Vérifie : `https://readlog-api.onrender.com/health` doit répondre `{"status":"ok"}`, et `/docs` affiche la documentation interactive.
+3. Au démarrage, `python -m app.migrate` (déjà dans la commande de `render.yaml`) crée les tables sur une base vide, puis applique les migrations aux déploiements suivants. Rien à faire à la main.
+4. Vérifie : `https://readlog-api.onrender.com/health` doit répondre `{"status":"ok"}`, et `/api/docs` affiche la documentation interactive.
 
 > ⚠️ Plan gratuit : le service s'endort après 15 min sans requête. La première requête suivante prend ~50 s. Pour une démo, ouvre `/health` quelques minutes avant.
 
@@ -90,7 +88,7 @@ Tu obtiens une URL du type `https://readlog.expo.app`. Ajoute-la dans `CORS_ORIG
 
 ## Checklist avant de partager le lien
 
-- [ ] `/health` répond, `/docs` s'affiche
+- [ ] `/health` répond, `/api/docs` s’affiche
 - [ ] Inscription → l'e-mail avec le code arrive bien
 - [ ] Connexion, ajout d'un livre, page stats OK sur l'APK
 - [ ] Version web : connexion OK (sinon vérifier `CORS_ORIGINS`)

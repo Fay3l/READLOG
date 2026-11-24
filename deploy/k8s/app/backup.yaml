@@ -1,0 +1,64 @@
+# Sauvegarde de la base chaque nuit à 3 h (pg_dump compressé), 7 jours d'historique.
+# ⚠️ Les sauvegardes sont sur le MÊME disque que la base : copie-les régulièrement ailleurs
+# (voir DOCS/DEPLOY-K3S.md, "Sauvegardes").
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: readlog-backups
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: readlog-backup
+spec:
+  schedule: "0 3 * * *"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: readlog-backup }
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+            fsGroup: 70
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: backup
+              image: postgres:17-alpine
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  file=/backups/readlog-$(date +%F).sql.gz
+                  pg_dump -h postgres -U readlog readlog | gzip > "$file.tmp"
+                  mv "$file.tmp" "$file"
+                  find /backups -name 'readlog-*.sql.gz' -mtime +7 -delete
+                  echo "Sauvegarde OK : $file ($(du -h "$file" | cut -f1))"
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: readlog-db, key: password }
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: ["ALL"] }
+              resources:
+                requests: { memory: 32Mi, cpu: 10m }
+                limits: { memory: 96Mi }
+              volumeMounts:
+                - { name: backups, mountPath: /backups }
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: readlog-backups }

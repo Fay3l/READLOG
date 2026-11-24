@@ -8,7 +8,10 @@ from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatc
 
 from app.core import config
 
-_hasher = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=2)
+# Paramètres minimum recommandés par l'OWASP pour Argon2id (19 Mio, 2 itérations, 1 thread).
+# Avant : 64 Mio par hachage, trop pour un petit VPS (3 connexions simultanées = 192 Mio).
+# Les paramètres sont enregistrés DANS chaque hash : les anciens mots de passe restent vérifiables.
+_hasher = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
 
 # Hash d'un mot de passe bidon : quand l'e-mail n'existe pas, on vérifie quand même ce hash
 # pour que la réponse prenne le même temps. Sinon, mesurer le temps de réponse révélerait
@@ -24,6 +27,14 @@ def verify_password(plain_password: str, hashed_password: str | None) -> bool:
     try:
         return _hasher.verify(hashed_password or _DUMMY_HASH, plain_password) and hashed_password is not None
     except (VerifyMismatchError, VerificationError, InvalidHashError):
+        return False
+
+
+def needs_rehash(hashed_password: str) -> bool:
+    """Vrai si le hash a été créé avec d'anciens paramètres : on le refait à la connexion suivante."""
+    try:
+        return _hasher.check_needs_rehash(hashed_password)
+    except InvalidHashError:
         return False
 
 

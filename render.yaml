@@ -10,7 +10,8 @@ services:
     buildCommand: pip install -r requirements.txt
     # --proxy-headers : Render est un proxy ; sans ça, toutes les requêtes semblent venir
     # de la même IP et le rate limiting bloquerait tout le monde en même temps.
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    # app.migrate crée / met à jour le schéma de la base avant de lancer l'API
+    startCommand: python -m app.migrate && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

@@ -18,11 +18,14 @@ engine: Engine | None = None
 def init_engine(url: str, echo: bool = False) -> Engine:
     """Appelé une seule fois au démarrage (app/main.py)."""
     global engine
-    # pool_pre_ping : vérifie qu'une connexion du pool est encore vivante avant de s'en servir
-    # (les bases hébergées coupent les connexions inactives)
-    # SQLite (tests, dev) interdit par défaut d'utiliser une connexion dans un autre thread
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    engine = create_engine(url, echo=echo, pool_pre_ping=True, connect_args=connect_args)
+    if url.startswith("sqlite"):
+        # SQLite (tests, dev) interdit par défaut d'utiliser une connexion dans un autre thread
+        engine = create_engine(url, echo=echo, connect_args={"check_same_thread": False})
+    else:
+        # Au plus 7 connexions par instance de l'API : Postgres est réglé pour 20 connexions
+        # (petit VPS), et pendant une mise à jour deux instances tournent en même temps.
+        # pool_pre_ping : vérifie qu'une connexion du pool est encore vivante avant de s'en servir.
+        engine = create_engine(url, echo=echo, pool_pre_ping=True, pool_size=5, max_overflow=2)
     SessionLocal.configure(bind=engine)
     return engine
 

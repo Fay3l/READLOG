@@ -1,0 +1,5 @@
+# Un namespace = un espace isolé pour toutes les ressources de ReadLog
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: readlog

@@ -1,0 +1,139 @@
+# Déploiement continu : à chaque push sur main, UNE FOIS LA CI AU VERT,
+#   1. construit les images Docker (API + web) et les publie sur GHCR (registre de GitHub)
+#   2. déploie la nouvelle version sur le k3s du VPS, via SSH
+#
+# Configuration (Settings → Secrets and variables → Actions) — voir DOCS/DEPLOY-K3S.md :
+#   Variables : READLOG_DOMAIN (ex : readlog.exemple.fr), APK_URL (optionnel)
+#   Secrets   : VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: # bouton "Run workflow" pour redéployer à la main
+
+# Un seul déploiement à la fois ; un nouveau push annule celui qui attend
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # workflow_run se déclenche aussi quand la CI échoue : on ne déploie que si elle a réussi
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # publier les images sur ghcr.io
+    strategy:
+      matrix:
+        include:
+          - name: api
+            context: backend
+          - name: web
+            context: mobile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # le commit validé par la CI (et pas un éventuel push arrivé entre-temps)
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Nom de l'image
+        id: image
+        run: |
+          # GHCR exige un nom en minuscules (Fay3l → fay3l)
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          sha="${{ github.event.workflow_run.head_sha || github.sha }}"
+          echo "ref=ghcr.io/${owner}/readlog-${{ matrix.name }}:${sha}" >> "$GITHUB_OUTPUT"
+          echo "latest=ghcr.io/${owner}/readlog-${{ matrix.name }}:latest" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          # tag = hash du commit : chaque version est identifiable et on peut revenir en arrière
+          tags: |
+            ${{ steps.image.outputs.ref }}
+            ${{ steps.image.outputs.latest }}
+          # l'URL de l'API est écrite dans le JavaScript au moment du build de la version web
+          build-args: |
+            EXPO_PUBLIC_API_URL=https://${{ vars.READLOG_DOMAIN }}/api
+            EXPO_PUBLIC_APK_URL=${{ vars.APK_URL }}
+          # cache des couches Docker entre deux builds (bien plus rapide)
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production # visible dans l'onglet "Environments" du dépôt, avec l'historique
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Générer les manifests
+        env:
+          DOMAIN: ${{ vars.READLOG_DOMAIN }}
+        run: |
+          test -n "$DOMAIN" || { echo "::error::Variable READLOG_DOMAIN manquante"; exit 1; }
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          sha="${{ github.event.workflow_run.head_sha || github.sha }}"
+          export DOMAIN
+          export API_IMAGE="ghcr.io/${owner}/readlog-api:${sha}"
+          export WEB_IMAGE="ghcr.io/${owner}/readlog-web:${sha}"
+          # kustomize assemble les fichiers, envsubst remplace UNIQUEMENT ces 3 variables
+          kubectl kustomize deploy/k8s/app | envsubst '${DOMAIN} ${API_IMAGE} ${WEB_IMAGE}' > rendered.yaml
+          ! grep -n '\${' rendered.yaml   # échoue s'il reste une variable non remplacée
+
+      - name: Configurer SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          # empreinte du serveur fixée à l'avance : protège contre un faux serveur (man-in-the-middle)
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Déployer sur k3s
+        env:
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          # KUBECONFIG explicite : le kubeconfig LIMITÉ du compte de déploiement (namespace readlog
+          # uniquement). Sans lui, le kubectl de k3s chercherait le fichier administrateur.
+          kube() { ssh -i ~/.ssh/id_deploy -o BatchMode=yes "$TARGET" 'KUBECONFIG=$HOME/.kube/config kubectl' "$@"; }
+          kube apply -f - < rendered.yaml
+          kube -n readlog rollout status statefulset/postgres --timeout=180s
+          kube -n readlog rollout status deployment/readlog-api --timeout=300s
+          kube -n readlog rollout status deployment/readlog-web --timeout=180s
+
+      - name: Logs en cas d'échec
+        if: failure()
+        env:
+          TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -o BatchMode=yes "$TARGET" '
+            export KUBECONFIG=$HOME/.kube/config
+            kubectl -n readlog get pods
+            kubectl -n readlog logs deployment/readlog-api -c migrate --tail=50 || true
+            kubectl -n readlog logs deployment/readlog-api -c api --tail=50 || true'
+
+      - name: Vérifier que le site répond
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS "https://${{ vars.READLOG_DOMAIN }}/api/docs" -o /dev/null && echo "✅ En ligne" && exit 0
+            sleep 6
+          done
+          echo "::error::https://${{ vars.READLOG_DOMAIN }} ne répond pas" && exit 1

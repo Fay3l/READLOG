@@ -31,8 +31,9 @@ async def search(
     query = f"isbn:{q}" if q.isdigit() and len(q) >= 10 else q
     try:
         remote = await search_books(query)
-    except httpx.HTTPError:
-        logger.warning("Google Books indisponible pour la recherche %r", q, exc_info=True)
+    except httpx.HTTPError as exc:
+        # panne attendue (quota, clé invalide, réseau) : une ligne suffit, pas de trace complète
+        logger.warning("Google Books indisponible pour %r : %s", q, exc)
         remote = []
 
     # 3. Fusion sans doublons (un livre Google déjà en base apparaît dans les deux listes)
