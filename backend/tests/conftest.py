@@ -1,8 +1,23 @@
 import os
 
-# ⚠️ Avant tout import de l'app : app/core/config.py exige ces variables au chargement
-os.environ.setdefault("DATABASE_URL", "sqlite://")
-os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-only-0123456789")
+# ⚠️ Avant tout import de l'app : on fixe TOUTE la configuration des tests.
+# Les variables sont imposées (et pas setdefault) : load_dotenv() ne remplace jamais une
+# variable déjà définie, donc le .env de ta machine est ignoré pendant les tests.
+# Sinon, un SMTP configuré dans .env ferait envoyer de vrais e-mails par les tests,
+# et une DATABASE_URL pointerait vers ta vraie base.
+TEST_ENV = {
+    "DATABASE_URL": "sqlite://",
+    "SECRET_KEY": "test-secret-key-for-pytest-only-0123456789",
+    "CORS_ORIGINS": "http://localhost:8081",
+    # vides = pas de SMTP : le code de vérification est écrit dans les logs, que les tests lisent
+    "MAIL_SERVER": "",
+    "MAIL_USERNAME": "",
+    "MAIL_PASSWORD": "",
+    "MAIL_FROM": "",
+    "GOOGLE_BOOKS_API_KEY": "",
+    "SQL_ECHO": "false",
+}
+os.environ.update(TEST_ENV)
 
 from uuid import uuid4  # noqa: E402
 
