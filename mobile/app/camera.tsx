@@ -40,7 +40,9 @@ export default function Camera() {
 
       if (!res || res.length === 0) {
         isScanning.current = false;
-        show('Livre non trouvé', 'error');
+        // ✅ Livre inconnu : on ouvre le formulaire d'ajout avec l'ISBN déjà rempli
+        show('Livre introuvable : ajoute-le manuellement', 'info');
+        router.replace({ pathname: '/addbook', params: { isbn: event.data } });
         return;
       }
 

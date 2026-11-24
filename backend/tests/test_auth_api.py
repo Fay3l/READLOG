@@ -83,7 +83,7 @@ def test_resend_code_is_generic_and_works_after_resend(client, caplog):
     _, email, _ = _signup(client, caplog)
     with caplog.at_level(logging.WARNING):
         known = client.post("/api/resend-code", params={"email": email})
-    new_code = re.search(r"(\d{6})", caplog.text).group(1)
+    new_code = re.search(rf"{re.escape(email)} : (\d{{6}})", caplog.text).group(1)
     unknown = client.post("/api/resend-code", params={"email": "inconnu@readlog.app"})
     # même réponse : pas d'énumération des comptes
     assert known.status_code == unknown.status_code == 200

@@ -9,6 +9,11 @@ const FIELD_MESSAGES: Record<string, string> = {
     email: 'Adresse e-mail invalide',
     name: 'Le nom doit contenir entre 2 et 30 caractères',
     code: 'Code invalide',
+    title: 'Le titre est obligatoire',
+    author: "L'auteur est obligatoire",
+    isbn: "L'ISBN doit contenir 10 ou 13 chiffres",
+    page_count: 'Nombre de pages invalide',
+    published_year: "L'année doit avoir 4 chiffres",
 }
 
 export function apiErrorMessage(err: any, fallback = 'Une erreur est survenue'): string {

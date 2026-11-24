@@ -60,3 +60,26 @@ export async function update_userbook(book_id: string, data: { status?: string; 
     return { ok: false as const, book: null, message: apiErrorMessage(err, 'Mise à jour impossible') };
   }
 }
+
+export type ManualBook = {
+  title: string
+  author: string
+  isbn?: string
+  page_count?: number
+  published_year?: string
+  publisher?: string
+  genre?: string
+  description?: string
+  status: 'to_read' | 'reading' | 'finished'
+}
+
+// Livre absent de Google Books : saisi à la main, il est enregistré dans la table books
+export async function create_manual_book(book: ManualBook): Promise<ActionResult> {
+  try {
+    await api.post('/books/manual', book);
+    await refreshLibrary();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: apiErrorMessage(err, 'Livre pas ajouté') };
+  }
+}

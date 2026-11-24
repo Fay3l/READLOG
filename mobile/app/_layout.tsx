@@ -127,6 +127,7 @@ function RootNavigator() {
         <Stack.Protected guard={!!session}>
           <Stack.Screen name='searchbooks' options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name='bookdetail' options={{ headerShown: false, animation: 'slide_from_right' }} />
+          <Stack.Screen name='addbook' options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!!session}>

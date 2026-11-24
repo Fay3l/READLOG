@@ -2,7 +2,8 @@ import { Screen } from "@/components/screen";
 import { useTheme } from "@/constants/themecontext";
 import { AppTheme } from "@/constants/theme";
 import { GetBook, toBookResult, useBookStore } from "@/types/books";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
+import { BackButton } from "@/components/backbutton";
 import { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,12 +39,6 @@ export default function BookDetail() {
     if (!book) return null;
 
     const inLibrary = !!book.id
-
-    const goBack = () => {
-        // ✅ l'écran est empilé dans le Stack : on revient simplement en arrière
-        if (router.canGoBack()) router.back()
-        else router.replace((page || '/(tabs)') as Parameters<typeof router.replace>[0])
-    }
 
     const addBook = async () => {
         setBusy(true)
@@ -92,10 +87,7 @@ export default function BookDetail() {
             <SafeAreaView style={{ flex: 1 }}>
                 {/* ── Barre du haut ── */}
                 <View style={styles.topbar}>
-                    <Pressable onPress={goBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Retour"
-                        style={({ pressed }) => [styles.back, pressed && { opacity: 0.7 }]}>
-                        <Text style={styles.back_text}>‹  Retour</Text>
-                    </Pressable>
+                    <BackButton fallback={(page || '/(tabs)') as Href} />
                     {busy ? <ActivityIndicator color={theme.colors.accent.default} /> : null}
                 </View>
 
@@ -206,17 +198,6 @@ function useStyles(theme: AppTheme) {
             justifyContent: 'space-between',
             paddingHorizontal: 20,
             paddingVertical: 8,
-        },
-        back: {
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderRadius: theme.radius.full,
-            backgroundColor: theme.colors.accent.ghost,
-        },
-        back_text: {
-            fontFamily: theme.fonts.dmSans.medium,
-            fontSize: theme.fontSizes.sm,
-            color: theme.colors.text.primary,
         },
         content: {
             paddingHorizontal: 20,
