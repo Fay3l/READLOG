@@ -25,7 +25,8 @@ git push main ──► CI (tests, lint) ──► CD ──► images Docker su
 | Fichier | Rôle |
 |---|---|
 | `backend/Dockerfile`, `mobile/Dockerfile` | images de l'API et du site |
-| `deploy/k8s/bootstrap/` | appliqué **une fois, par toi** (admin) : namespace, ClusterIssuer, compte de déploiement |
+| `deploy/k8s/setup/` | ClusterIssuer Let's Encrypt, **partagé par tous les sites du cluster** (une fois par serveur) |
+| `deploy/k8s/bootstrap/` | appliqué **une fois, par toi** (admin) : namespace et compte de déploiement de ReadLog |
 | `deploy/k8s/app/` | appliqué **par GitHub Actions** à chaque déploiement |
 | `deploy/create-secrets.sh` | crée les mots de passe (une fois, sur le VPS) |
 | `.github/workflows/cd.yml` | build + déploiement automatique |
@@ -62,14 +63,15 @@ git clone https://github.com/Fay3l/READLOG.git && cd READLOG
 
 kubectl apply -f deploy/k8s/bootstrap/namespace.yaml
 
-# ClusterIssuer Let's Encrypt : seule info demandée, ton e-mail
-ACME_EMAIL=toi@exemple.fr envsubst < deploy/k8s/bootstrap/cluster-issuer.yaml | kubectl apply -f -
+# ClusterIssuer Let's Encrypt — partagé par tous les sites du cluster :
+# à faire une seule fois par serveur (inutile s'il existe déjà pour tes autres sites)
+kubectl get clusterissuer letsencrypt-prod || kubectl apply -f deploy/k8s/setup/cluster-issuer.yaml
 
 # Compte de déploiement limité au namespace readlog (ne peut pas lire les secrets)
 kubectl apply -f deploy/k8s/bootstrap/deployer-rbac.yaml
 ```
 
-`kubectl get clusterissuer` doit afficher `letsencrypt-prod` et `letsencrypt-staging` avec `READY: True`.
+`kubectl get clusterissuer letsencrypt-prod` doit afficher `READY: True`.
 
 ## Étape 3 — Les secrets (une fois, sur le VPS)
 
@@ -154,7 +156,7 @@ kubectl -n readlog get certificate        # READY: True quand le certificat HTTP
 kubectl -n readlog logs deploy/readlog-api -c migrate   # création du schéma de la base
 ```
 
-> 💡 Pour un premier essai, remplace `letsencrypt-prod` par `letsencrypt-staging` dans `deploy/k8s/app/ingress.yaml` : en cas d'erreur de config, tu ne risques pas la limite de Let's Encrypt (5 échecs/heure). Le navigateur affichera un avertissement, c'est normal. Remets `prod` ensuite.
+> 💡 Let's Encrypt limite les échecs à 5 par heure et par domaine. Si le certificat n'arrive pas, corrige la cause (DNS, port 80) avant de réessayer en boucle : `kubectl -n readlog describe challenge`.
 
 ## Étape 7 — Vérifier
 

@@ -1,5 +1,5 @@
 # À appliquer UNE SEULE FOIS sur le serveur, après l'installation de cert-manager :
-#   kubectl apply -f deploy/setup/cluster-issuer.yaml
+#   kubectl apply -f deploy/k8s/setup/cluster-issuer.yaml
 # Sert à tous les sites du cluster (store, apps clients…).
 # installer dans le serveur 
 apiVersion: cert-manager.io/v1
