@@ -36,6 +36,11 @@ spec:
   template:
     metadata:
       labels: { app.kubernetes.io/name: readlog-api }
+      annotations:
+        # Empreinte des secrets, calculée par le CD : si un secret change dans GitHub,
+        # l'empreinte change, donc le pod change, donc Kubernetes redémarre l'API
+        # (sinon elle garderait les anciennes valeurs en mémoire).
+        readlog/secrets-hash: "${SECRETS_HASH}"
     spec:
       # Sécurité du pod : jamais root, pas d'élévation de privilèges, profil seccomp par défaut
       securityContext:

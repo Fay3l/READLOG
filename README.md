@@ -121,7 +121,7 @@ Ces vérifications tournent automatiquement sur chaque push et pull request ([`.
 - Message d'erreur identique pour « compte inconnu » et « mauvais mot de passe », avec un temps de réponse identique
 - Validation de toutes les entrées avec Pydantic ; clé JWT d'au moins 32 caractères obligatoire
 - Jeton stocké dans le **SecureStore** du téléphone ; déconnexion automatique à son expiration
-- Secrets uniquement dans les variables d'environnement (voir [`backend/.env.example`](backend/.env.example))
+- Secrets de production **chiffrés avec SOPS + age** dans le dépôt (`deploy/secrets/`), déchiffrés uniquement par le serveur au déploiement ; la CI refuse tout secret commité en clair
 
 ## Endpoints principaux
 

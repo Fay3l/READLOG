@@ -8,6 +8,14 @@ on:
   pull_request:
 
 jobs:
+  secrets:
+    name: Secrets chiffrés (SOPS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Bloque tout push qui contiendrait un secret en clair dans deploy/secrets/
+      - run: bash deploy/secrets/check-encrypted.sh
+
   backend:
     name: Backend (ruff + pytest)
     runs-on: ubuntu-latest
