@@ -1,0 +1,14 @@
+# Configuration de SOPS : avec quelles clés chiffrer les secrets du dépôt.
+#
+# Chaque fichier deploy/secrets/*.env est chiffré pour DEUX destinataires "age" :
+#   1. ta clé personnelle (ton PC)   → pour créer et modifier les secrets
+#   2. la clé du VPS (runner GitHub) → pour les déchiffrer au déploiement
+# Seules les clés PUBLIQUES (age1...) sont ici : on peut les publier sans risque.
+# Les clés PRIVÉES restent sur ton PC et sur le VPS (et une copie dans ton gestionnaire
+# de mots de passe). Voir DOCS/DEPLOY-K3S.md, étape 4.
+creation_rules:
+  - path_regex: deploy/secrets/[^/]+\.env$
+    # Remplace par tes deux clés publiques, séparées par une virgule
+    age: >-
+      age1REMPLACE_PAR_LA_CLE_PUBLIQUE_DE_TON_PC,
+      age1REMPLACE_PAR_LA_CLE_PUBLIQUE_DU_VPS

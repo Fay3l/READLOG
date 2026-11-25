@@ -20,6 +20,9 @@ build/
 .env.*
 # garder l'exemple sans les vraies valeurs (pas de commentaire en fin de ligne dans un .gitignore)
 !.env.example
+# copies déchiffrées des secrets SOPS : ne jamais les commiter
+deploy/secrets/*.dec.env
+deploy/secrets/*.plain.env
 
 # ── IDEs & éditeurs ───────────────────────────────────────
 .vscode/

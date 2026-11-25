@@ -16,7 +16,7 @@ Le web et l'API partagent la même origine : **pas de configuration CORS** à g�
 git push main ──► CI (tests, lint) ──► CD ─► build sur les runners GitHub ─► images sur ghcr.io
                                          └─► runner auto-hébergé sur le VPS
                                                ├─ ClusterIssuer (créé s'il manque)
-                                               ├─ Secrets k8s (depuis les GitHub Secrets)
+                                               ├─ Secrets k8s (déchiffrés avec SOPS)
                                                └─ kubectl apply (namespace readlog)
                                                                      ├─ postgres (StatefulSet + disque)
                                                                      ├─ readlog-api (+ migrations avant démarrage)
@@ -31,6 +31,7 @@ git push main ──► CI (tests, lint) ──► CD ─► build sur les runne
 | `deploy/k8s/setup/` | ClusterIssuer Let's Encrypt, **partagé par tous les sites du cluster** (créé par le CD s'il manque) |
 | `deploy/k8s/bootstrap/` | appliqué **une fois, par toi** (admin) : namespace et compte de déploiement de ReadLog |
 | `deploy/k8s/app/` | appliqué **par GitHub Actions** à chaque déploiement |
+| `deploy/secrets/production.env` + `.sops.yaml` | secrets de production, **chiffrés avec SOPS** (étape 4) |
 | `.github/workflows/cd.yml` | build + déploiement automatique |
 | `.github/workflows/release-apk.yml` | APK Android publié dans les Releases GitHub |
 
@@ -122,38 +123,93 @@ Test : `sudo -u github-runner env KUBECONFIG=/home/github-runner/.kube/config ku
 N'importe qui peut ouvrir une pull request sur un dépôt public. Si un workflow lancé par cette PR s'exécutait sur ton runner, le code d'un inconnu tournerait sur ton VPS. Trois protections, toutes nécessaires :
 
 1. **Le workflow CD ne se déclenche jamais sur `pull_request`**, seulement sur `main` ou à la main. Garde-le ainsi, et n'utilise jamais `runs-on: self-hosted` dans un workflow déclenché par une PR.
-2. **Settings → Environments → New environment `production`** → *Deployment branches and tags* → *Selected branches* → `main`. Les secrets de production ne sont alors utilisables que depuis `main`.
+2. **Settings → Environments → New environment `production`** → *Deployment branches and tags* → *Selected branches* → `main`. Le job de déploiement ne peut alors partir que de `main`.
 3. **Settings → Actions → General → Fork pull request workflows** → *Require approval for all external contributors*.
 
-## Étape 4 — Configurer GitHub
+## Étape 4 — Les secrets, chiffrés avec SOPS
 
-Dans **Settings → Environments → production** (créé à l'étape 3), mets les secrets dans l'environnement plutôt qu'au niveau du dépôt : ils ne seront accessibles qu'au job de déploiement, depuis `main`.
+Les secrets de production sont **versionnés dans Git, mais chiffrés** : `deploy/secrets/production.env`. Seules deux machines peuvent les déchiffrer, celles qui ont une clé privée **age** :
 
-| Type | Nom | Valeur |
-|---|---|---|
-| Variable | `READLOG_DOMAIN` | `readlog.ton-domaine.fr` |
-| Variable | `APK_URL` | (après l'étape 7) |
-| Secret | `DB_PASSWORD` | mot de passe Postgres (généré, voir ci-dessous) |
-| Secret | `SECRET_KEY` | clé JWT, 32 caractères minimum (générée) |
-| Secret | `MAIL_SERVER`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | ton SMTP (Brevo, Resend…) |
-| Secret | `GOOGLE_BOOKS_API_KEY` | ta clé Google Books (optionnel) |
-
-`READLOG_DOMAIN` et `APK_URL` sont des **variables** et non des secrets : elles se retrouvent dans le JavaScript public du site.
-
-> ⚠️ Le job `build` (sur les runners GitHub) lit aussi `READLOG_DOMAIN` et `APK_URL`. S'il n'est pas rattaché à l'environnement `production`, mets ces **deux variables au niveau du dépôt** (Settings → Secrets and variables → Actions → Variables). Les secrets, eux, restent dans l'environnement.
-
-Pour générer les deux valeurs aléatoires (sur ton PC) :
-
-```bash
-openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32; echo   # DB_PASSWORD
-openssl rand -base64 64 | tr -dc 'A-Za-z0-9' | head -c 64; echo   # SECRET_KEY
+```
+Ton PC  (clé privée "pc")  ─ sops ─► deploy/secrets/production.env  (valeurs ENC[...], commité)
+                                              │ git push
+Le VPS  (clé privée "vps") ─ runner : sops decrypt ─► Secrets Kubernetes
 ```
 
-> 🔐 **Copie-les aussi dans ton gestionnaire de mots de passe.** GitHub ne permet pas de relire un secret une fois enregistré : ce sera ta seule copie.
+GitHub ne voit que du texte chiffré : même un accès complet au dépôt ne révèle aucun mot de passe.
 
-> ⚠️ **Ne change pas `DB_PASSWORD` après le premier déploiement.** Postgres ne lit son mot de passe qu'à la création de la base. Changer le secret mettrait à jour l'API mais pas Postgres, et l'API ne pourrait plus se connecter. Pour le changer quand même : d'abord dans Postgres (`kubectl -n readlog exec -it postgres-0 -- psql -U readlog -c "ALTER USER readlog PASSWORD '...'"`), ensuite dans GitHub, puis redéployer.
+### 4.1 Installer sops et age (sur ton PC et sur le VPS)
+
+```bash
+# age : générateur de clés et chiffrement (paquet Ubuntu / Debian ; sur Mac : brew install age sops)
+sudo apt install age
+# sops : binaire officiel, vérifié avec sa somme de contrôle
+V=v3.10.2
+curl -LO https://github.com/getsops/sops/releases/download/$V/sops-$V.linux.amd64
+curl -LO https://github.com/getsops/sops/releases/download/$V/sops-$V.checksums.txt
+grep " sops-$V.linux.amd64$" sops-$V.checksums.txt | sha256sum -c -   # doit afficher OK
+sudo install -m 755 sops-$V.linux.amd64 /usr/local/bin/sops
+```
+
+### 4.2 Créer les deux clés
+
+**Sur ton PC :**
+
+```bash
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt     # affiche "Public key: age1..."  → clé publique du PC
+```
+
+**Sur le VPS**, pour l'utilisateur du runner :
+
+```bash
+sudo -iu github-runner
+mkdir -p ~/.config/sops/age && age-keygen -o ~/.config/sops/age/keys.txt   # → clé publique du VPS
+chmod 600 ~/.config/sops/age/keys.txt
+exit
+```
+
+> 🔐 **Copie la clé privée du PC dans ton gestionnaire de mots de passe** (le contenu de `keys.txt`). Si tu perds les deux clés privées, les secrets chiffrés sont définitivement illisibles.
+
+### 4.3 Déclarer les clés publiques
+
+Dans `.sops.yaml` (à la racine du dépôt), remplace les deux `age1REMPLACE_...` par tes clés **publiques** (celles qui commencent par `age1`). Elles ne sont pas secrètes.
+
+### 4.4 Créer le fichier chiffré (sur ton PC, à la racine du dépôt)
+
+```bash
+cp deploy/secrets/production.env.example deploy/secrets/production.env
+# remplis les valeurs ; pour générer les deux valeurs aléatoires :
+openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32; echo   # DB_PASSWORD
+openssl rand -base64 64 | tr -dc 'A-Za-z0-9' | head -c 64; echo   # SECRET_KEY
+
+sops encrypt --in-place deploy/secrets/production.env   # ⚠️ AVANT git add
+bash deploy/secrets/check-encrypted.sh                  # ✅ Secrets : tous chiffrés
+git add .sops.yaml deploy/secrets/production.env && git commit -m "Secrets de production (chiffrés)"
+```
+
+Ouvre le fichier : les noms sont lisibles, les valeurs sont devenues `ENC[AES256_GCM,data:...]`. Pour **modifier** un secret plus tard :
+
+```bash
+sops deploy/secrets/production.env    # s'ouvre déchiffré dans ton éditeur, rechiffré à l'enregistrement
+```
+
+Filet de sécurité : la CI lance `check-encrypted.sh` à chaque push. Un fichier `deploy/secrets/*.env` en clair, ou une valeur oubliée en clair, fait échouer la CI. Le CD ne se lance donc pas.
+
+> ⚠️ **Ne change pas `DB_PASSWORD` après le premier déploiement.** Postgres ne lit son mot de passe qu'à la création de la base. Changer la valeur mettrait à jour l'API mais pas Postgres, et l'API ne pourrait plus se connecter. Pour le changer quand même : d'abord dans Postgres (`kubectl -n readlog exec -it postgres-0 -- psql -U readlog -c "ALTER USER readlog PASSWORD '...'"`), ensuite dans le fichier, puis redéployer.
 >
 > Les autres secrets peuvent changer quand tu veux : au déploiement suivant, l'API redémarre automatiquement avec les nouvelles valeurs (l'empreinte des secrets fait partie du pod).
+
+### 4.5 Les variables GitHub (non secrètes)
+
+**Settings → Secrets and variables → Actions → Variables** (au niveau du dépôt : le job `build` en a besoin aussi) :
+
+| Variable | Valeur |
+|---|---|
+| `READLOG_DOMAIN` | `readlog.ton-domaine.fr` |
+| `APK_URL` | (après l'étape 7) |
+
+Ce sont des **variables** et non des secrets : elles se retrouvent dans le JavaScript public du site. Aucun GitHub Secret n'est nécessaire pour le déploiement.
 
 ## Étape 5 — Premier déploiement
 
@@ -161,7 +217,7 @@ Fusionne sur `main` (ou onglet **Actions → CD → Run workflow**). Le workflow
 
 1. attend que la CI soit verte ;
 2. construit les images `ghcr.io/<toi>/readlog-api` et `readlog-web` sur les runners de GitHub (taggées avec le hash du commit) ;
-3. sur ton VPS : crée le ClusterIssuer s'il manque, crée ou met à jour les Secrets, applique les manifests ;
+3. sur ton VPS : crée le ClusterIssuer s'il manque, déchiffre les secrets (SOPS) et crée ou met à jour les Secrets Kubernetes, applique les manifests ;
 4. vérifie que `https://readlog.ton-domaine.fr/api/docs` répond.
 
 **Au premier passage uniquement :** les images publiées sur GHCR peuvent être privées, et k3s ne pourra alors pas les télécharger (`ImagePullBackOff`). Sur GitHub : ton profil → **Packages** → `readlog-api` → *Package settings* → *Change visibility* → **Public**. Pareil pour `readlog-web`, puis relance le workflow.
@@ -213,7 +269,7 @@ kubectl -n readlog top pods                              # consommation mémoire
 kubectl -n readlog logs -f deploy/readlog-api            # logs de l'API
 kubectl -n readlog rollout undo deployment/readlog-api   # revenir à la version précédente
 kubectl -n readlog rollout restart deployment/readlog-api # redémarrer l'API
-# Changer un secret : dans GitHub (environnement production), puis relancer le CD
+# Changer un secret : sops deploy/secrets/production.env, commit, push → le CD redéploie
 ```
 
 ## Dépannage
@@ -227,6 +283,9 @@ kubectl -n readlog rollout restart deployment/readlog-api # redémarrer l'API
 | Le job `deploy` reste « Queued » | runner arrêté → `sudo ./svc.sh status` dans `/home/github-runner/actions-runner` |
 | `Forbidden` dans les logs du CD | kubeconfig du runner incorrect, ou `deployer-rbac.yaml` pas à jour → refaire l'étape 2 |
 | L'API ne se connecte plus à Postgres | `DB_PASSWORD` changé après coup (voir étape 4) |
+| `Clé age du VPS introuvable` | clé privée absente de `/home/github-runner/.config/sops/age/keys.txt` (étape 4.2) |
+| `Failed to get the data key` | le fichier n'est pas chiffré pour la clé du VPS → vérifier `.sops.yaml`, puis `sops updatekeys deploy/secrets/production.env` |
+| La CI échoue sur « Secrets chiffrés » | un secret est en clair → `sops encrypt --in-place deploy/secrets/production.env` |
 
 ## Alternative sans cert-manager (si la mémoire manque)
 

@@ -1,8 +1,8 @@
 # Déploiement continu : à chaque push sur main, UNE FOIS LA CI AU VERT,
 #   1. build  : images Docker (API + web) construites sur les runners de GitHub, publiées sur GHCR
 #               (jamais sur le VPS : un build demande plus d'1 Go de RAM)
-#   2. deploy : sur le runner auto-hébergé du VPS → ClusterIssuer si absent, Secrets k8s depuis
-#               les GitHub Secrets, kubectl apply, attente de la mise à jour
+#   2. deploy : sur le runner auto-hébergé du VPS → ClusterIssuer si absent, Secrets k8s déchiffrés
+#               avec SOPS (deploy/secrets/production.env), kubectl apply, attente de la mise à jour
 #
 # ⚠️ Dépôt public + runner auto-hébergé : ce workflow ne doit JAMAIS se déclencher sur
 # "pull_request" (le code d'un fork s'exécuterait sur ton VPS). Il ne tourne que sur main.
@@ -108,20 +108,15 @@ jobs:
             kubectl create -f deploy/k8s/setup/cluster-issuer.yaml
           fi
 
-      - name: Secrets Kubernetes (depuis les GitHub Secrets)
+      - name: Secrets Kubernetes (déchiffrés avec SOPS)
         id: secrets
-        env:
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
-          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
         run: |
           set -euo pipefail
-          [ "${#SECRET_KEY}" -ge 32 ] || { echo "::error::Secret SECRET_KEY absent ou trop court (32 caractères min.)"; exit 1; }
-          [ -n "$DB_PASSWORD" ] || { echo "::error::Secret DB_PASSWORD absent"; exit 1; }
+          # Clé privée age du VPS : seule machine (avec ton PC) capable de déchiffrer les secrets.
+          # Elle n'est jamais dans Git ni dans GitHub.
+          export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+          test -r "$SOPS_AGE_KEY_FILE" || { echo "::error::Clé age du VPS introuvable ($SOPS_AGE_KEY_FILE)"; exit 1; }
+          test -f deploy/secrets/production.env || { echo "::error::deploy/secrets/production.env manquant (voir le guide, étape 4)"; exit 1; }
 
           # Fichiers temporaires lisibles par le seul utilisateur du runner (umask 077).
           # --from-env-file plutôt que --from-literal : les valeurs n'apparaissent pas dans
@@ -129,13 +124,27 @@ jobs:
           umask 077
           dir=$(mktemp -d "$RUNNER_TEMP/secrets.XXXXXX")
           trap 'rm -rf "$dir"' EXIT
+
+          # Déchiffrement : les valeurs ne passent que par ce dossier temporaire
+          sops decrypt --input-type dotenv --output-type dotenv deploy/secrets/production.env > "$dir/all.env"
+          # Lecture ligne à ligne (et pas "source" : une valeur ne doit jamais être exécutée)
+          declare -A S=()
+          while IFS= read -r line; do
+            [[ -z "$line" || "$line" == \#* ]] && continue
+            S["${line%%=*}"]="${line#*=}"
+          done < "$dir/all.env"
+          DB_PASSWORD="${S[DB_PASSWORD]:-}"
+          SECRET_KEY="${S[SECRET_KEY]:-}"
+          [ "${#SECRET_KEY}" -ge 32 ] || { echo "::error::SECRET_KEY absente ou trop courte (32 caractères min.)"; exit 1; }
+          [ -n "$DB_PASSWORD" ] || { echo "::error::DB_PASSWORD absent"; exit 1; }
+
           printf 'password=%s\n' "$DB_PASSWORD" > "$dir/db.env"
           {
             printf 'DATABASE_URL=postgresql://readlog:%s@postgres:5432/readlog\n' "$DB_PASSWORD"
             printf 'SECRET_KEY=%s\n' "$SECRET_KEY"
-            printf 'MAIL_SERVER=%s\nMAIL_USERNAME=%s\nMAIL_PASSWORD=%s\nMAIL_FROM=%s\n' \
-              "$MAIL_SERVER" "$MAIL_USERNAME" "$MAIL_PASSWORD" "$MAIL_FROM"
-            printf 'GOOGLE_BOOKS_API_KEY=%s\n' "$GOOGLE_BOOKS_API_KEY"
+            for key in MAIL_SERVER MAIL_USERNAME MAIL_PASSWORD MAIL_FROM GOOGLE_BOOKS_API_KEY; do
+              printf '%s=%s\n' "$key" "${S[$key]:-}"
+            done
           } > "$dir/api.env"
 
           # "create --dry-run | apply" : crée le Secret la 1re fois, le met à jour ensuite
