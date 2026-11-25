@@ -1,6 +1,7 @@
-# Compte utilisé par GitHub Actions pour déployer.
-# Principe du moindre privilège : il ne peut agir QUE dans le namespace "readlog",
-# et ne peut ni lire ni modifier les Secrets (mots de passe, clés).
+# Compte utilisé par le runner GitHub Actions (sur le VPS) pour déployer.
+# Principe du moindre privilège : il ne peut agir QUE dans le namespace "readlog"
+# (+ créer le ClusterIssuer partagé s'il manque). Il ne peut rien supprimer,
+# ni toucher aux autres namespaces (kube-system, tes autres sites...).
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -25,6 +26,8 @@ rules:
       - ingresses
       - networkpolicies
       - middlewares
+      # les Secrets sont créés par le CD à partir des GitHub Secrets
+      - secrets
     verbs: ["get", "list", "watch", "create", "update", "patch"]
   # lecture seule, pour suivre le déploiement (kubectl rollout status, logs en cas d'échec)
   - apiGroups: ["", "apps"]
@@ -43,6 +46,30 @@ subjects:
 roleRef:
   kind: Role
   name: readlog-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterIssuer = ressource de niveau cluster : il faut un ClusterRole.
+# Uniquement le lire et le créer s'il manque (pas le modifier : il est partagé avec tes autres sites).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: readlog-deployer-clusterissuer
+rules:
+  - apiGroups: ["cert-manager.io"]
+    resources: ["clusterissuers"]
+    verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readlog-deployer-clusterissuer
+subjects:
+  - kind: ServiceAccount
+    name: readlog-deployer
+    namespace: readlog
+roleRef:
+  kind: ClusterRole
+  name: readlog-deployer-clusterissuer
   apiGroup: rbac.authorization.k8s.io
 ---
 # Jeton longue durée du compte (Kubernetes le génère et le stocke dans ce Secret)
